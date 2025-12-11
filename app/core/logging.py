@@ -4,12 +4,14 @@ from pathlib import Path
 
 from rich.logging import RichHandler
 
+
 LOGS_DIR = Path("logs")
 LOGS_DIR.mkdir(exist_ok=True)
 LOG_FILE = LOGS_DIR / "app.log"
 
+
 def setup_logging() -> logging.Logger:
-    """Настраивает централизованное логирование строго по ТЗ."""
+    """Настраивает централизованное логирование."""
     log_format = "%(asctime)s [%(levelname)s] [%(user)s] %(message)s"
 
     console_handler = RichHandler(rich_tracebacks=True, show_path=False)
@@ -28,7 +30,7 @@ def setup_logging() -> logging.Logger:
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
 
-    def user_filter(record):
+    def user_filter(record: logging.LogRecord) -> bool:
         record.user = getattr(record, "user", "SYSTEM")
         return True
 
