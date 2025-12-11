@@ -1,5 +1,8 @@
 name: cafe_booking
 
+volumes:
+  pg_data:
+
 services:
   db:
     container_name: cafe-db
@@ -11,7 +14,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - "./pgdata:/var/lib/postgresql/data/pgdata"
+      - pg_data:/var/lib/postgresql/data/pgdata
     command: >
       postgres -c max_connections=1000
                -c shared_buffers=256MB
@@ -26,3 +29,24 @@ services:
       timeout: 10s
       retries: 5
     restart: unless-stopped
+  backend:
+    container_name: cafe-back
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - db
+    restart: unless-stopped
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - 8000:80
+    depends_on:
+      - db
+      - backend
