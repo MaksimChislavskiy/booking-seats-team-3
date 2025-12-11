@@ -8,7 +8,7 @@ services:
     container_name: cafe-db
     image: postgres:17-alpine
     env_file:
-      - .env
+      - .env.docker
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
@@ -35,7 +35,7 @@ services:
       context: .
       dockerfile: docker/app/Dockerfile
     env_file:
-      - .env
+      - .env.docker
     depends_on:
       - db
     restart: unless-stopped
@@ -44,7 +44,7 @@ services:
       context: .
       dockerfile: docker/nginx/Dockerfile
     env_file:
-      - .env
+      - .env.docker
     ports:
       - 8000:80
     depends_on:

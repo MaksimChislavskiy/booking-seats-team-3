@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
-        """Формирует URL для подключения к БД."""
+        """Динамически формирует URL для подключения к БД."""
         return (
             f'postgresql+asyncpg://{self.postgres_user}:'
             f'{self.postgres_password}@{self.postgres_server}:'
