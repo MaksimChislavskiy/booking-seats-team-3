@@ -12,7 +12,7 @@ LOG_FILE = LOGS_DIR / "app.log"
 
 
 def setup_logging() -> logging.Logger:
-    """Настраивает централизованное логирование."""
+    """Настраивает централизованное логирование строго по ТЗ."""
     log_format = "%(asctime)s [%(levelname)s] [%(user)s] %(message)s"
 
     console_handler = RichHandler(rich_tracebacks=True, show_path=False)
