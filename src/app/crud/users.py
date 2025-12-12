@@ -1,15 +1,15 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from typing import Optional
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import get_password_hash
 from app.models.users import User
 from app.schemas.users import UserCreate, UserUpdate
-from app.core.security import get_password_hash
 
 
 class UserCRUD:
-    """
-    CRUD-класс для работы с пользователями.
+    """CRUD-класс для работы с пользователями.
 
     Содержит операции получения, создания, обновления
     и деактивации пользователей.
@@ -17,8 +17,7 @@ class UserCRUD:
 
     @staticmethod
     async def get_by_id(user_id: int, session: AsyncSession) -> Optional[User]:
-        """
-        Получает пользователя по его ID.
+        """Получает пользователя по его ID.
 
         Возвращает объект пользователя или None, если он не найден.
         """
@@ -26,9 +25,11 @@ class UserCRUD:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def get_by_email(email: str, session: AsyncSession) -> Optional[User]:
-        """
-        Получает пользователя по email.
+    async def get_by_email(
+        email: str,
+        session: AsyncSession,
+    ) -> Optional[User]:
+        """Получает пользователя по email.
 
         Используется при проверках уникальности и аутентификации.
         """
@@ -37,8 +38,7 @@ class UserCRUD:
 
     @staticmethod
     async def create(user_in: UserCreate, session: AsyncSession) -> User:
-        """
-        Создает нового пользователя.
+        """Создает нового пользователя.
 
         Пароль автоматически хешируется и сохраняется
         в виде password_hash.
@@ -58,9 +58,12 @@ class UserCRUD:
         return new_user
 
     @staticmethod
-    async def update(user: User, user_in: UserUpdate, session: AsyncSession) -> User:
-        """
-        Обновляет данные пользователя.
+    async def update(
+        user: User,
+        user_in: UserUpdate,
+        session: AsyncSession,
+    ) -> User:
+        """Обновляет данные пользователя.
 
         Обновляются только переданные поля.
         При передаче нового пароля он хешируется автоматически.
@@ -78,8 +81,7 @@ class UserCRUD:
 
     @staticmethod
     async def delete(user: User, session: AsyncSession) -> User:
-        """
-        Деактивирует пользователя.
+        """Деактивирует пользователя.
 
         Мягкое удаление — пользователь остаётся в базе,
         но помечается как неактивный.
