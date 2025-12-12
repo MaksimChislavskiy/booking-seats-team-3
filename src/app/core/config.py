@@ -1,6 +1,8 @@
 from pydantic import EmailStr
 from pydantic_settings import BaseSettings
 
+from app.core.constants import INFRA_DIR
+
 
 class Settings(BaseSettings):
     """Содержит основные настройки проекта."""
@@ -28,7 +30,7 @@ class Settings(BaseSettings):
     class Config:
         """Конфигурация приложения."""
 
-        env_file = '.env'
+        env_file = INFRA_DIR / '.env'
         env_file_encoding = 'utf-8'
 
 

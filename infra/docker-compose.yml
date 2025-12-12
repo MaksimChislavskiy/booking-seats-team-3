@@ -32,8 +32,8 @@ services:
   backend:
     container_name: cafe-back
     build:
-      context: .
-      dockerfile: docker/app/Dockerfile
+      context: ..
+      dockerfile: src/Dockerfile
     env_file:
       - .env.docker
     depends_on:
@@ -41,8 +41,8 @@ services:
     restart: unless-stopped
   gateway:
     build:
-      context: .
-      dockerfile: docker/nginx/Dockerfile
+      context: ..
+      dockerfile: infra/nginx/Dockerfile
     env_file:
       - .env.docker
     ports:
