@@ -15,7 +15,7 @@ MAX_SIZE = 5 * 1024 * 1024  # 5 МБ
 
 
 @router.post("/upload")
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(file: UploadFile = File(...)) -> dict[str, str]:
     """Загрузка изображения (только JPG/PNG, max 5 МБ)."""
     if file.content_type not in ["image/jpeg", "image/png"]:
         raise HTTPException(
@@ -47,7 +47,7 @@ async def upload_image(file: UploadFile = File(...)):
 
 
 @router.get("/{image_id}")
-async def get_image(image_id: str):
+async def get_image(image_id: str) -> FileResponse:
     """Отдача изображения по ID."""
     file_path = MEDIA_DIR / f"{image_id}.jpg"
     if not file_path.exists():
