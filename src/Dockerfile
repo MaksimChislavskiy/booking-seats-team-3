@@ -2,6 +2,8 @@ FROM python:3.12
 
 WORKDIR /app
 
+ENV RUN_IN_DOCKER=yes
+
 RUN pip install --upgrade pip
 
 COPY src/requirements ./requirements
