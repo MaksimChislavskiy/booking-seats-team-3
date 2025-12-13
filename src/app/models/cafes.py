@@ -1,13 +1,12 @@
-# src/app/models/cafes.py
-from typing import Optional, List
+from typing import List, Optional
 
 from sqlalchemy import Integer, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import (
-    CAFE_NAME_MAX_LENGTH,
     CAFE_ADDRESS_MAX_LENGTH,
+    CAFE_NAME_MAX_LENGTH,
     CAFE_PHONE_MAX_LENGTH,
 )
 from app.core.db import Base
@@ -16,8 +15,10 @@ from app.models.base import AuditMixin
 
 class Cafe(Base, AuditMixin):
     """Модель кафе.
+
     Содержит информацию о кафе: название, адрес, контакты, менеджеры.
     """
+
     name: Mapped[str] = mapped_column(
         String(CAFE_NAME_MAX_LENGTH),
         nullable=False,
@@ -45,12 +46,12 @@ class Cafe(Base, AuditMixin):
         default=[],  # Пустой массив по умолчанию
     )
     # Связи
-    tables: Mapped[List["Table"]] = relationship(
+    tables: Mapped[List["Table"]] = relationship(  # noqa: F821
         "Table",
         back_populates="cafe",
         cascade="all, delete-orphan",
     )
-    slots: Mapped[List["Slot"]] = relationship(
+    slots: Mapped[List["Slot"]] = relationship(  # noqa: F821
         "Slot",
         back_populates="cafe",
         cascade="all, delete-orphan",
