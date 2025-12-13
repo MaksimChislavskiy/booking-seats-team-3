@@ -20,7 +20,7 @@ router = APIRouter(tags=["Кафе"])
 async def create_cafe_endpoint(
     cafe_in: CafeCreate,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> CafeRead:
     """Создание нового кафе."""
     return await create_cafe(db, cafe_in)
 
@@ -30,7 +30,7 @@ async def get_cafes_endpoint(
     skip: int = 0,
     limit: int = 100,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> List[CafeRead]:
     """Список всех кафе с пагинацией."""
     return await get_cafes_list(db, skip=skip, limit=limit)
 
@@ -39,7 +39,7 @@ async def get_cafes_endpoint(
 async def get_cafe_endpoint(
     cafe_id: int,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> CafeRead:
     """Получение кафе по ID."""
     cafe = await get_cafe_by_id(db, cafe_id)
     if not cafe:
@@ -55,7 +55,7 @@ async def update_cafe_endpoint(
     cafe_id: int,
     cafe_in: CafeUpdate,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> CafeRead:
     """Обновление кафе."""
     cafe = await get_cafe_by_id(db, cafe_id)
     if not cafe:
@@ -70,7 +70,7 @@ async def update_cafe_endpoint(
 async def delete_cafe_endpoint(
     cafe_id: int,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> None:
     """Удаление кафе."""
     cafe = await get_cafe_by_id(db, cafe_id)
     if not cafe:
