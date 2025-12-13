@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import CheckConstraint, ForeignKey, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.constants import MIN_SEATS_NUMBER, MAX_SEATS_NUMBER
+from app.core.constants import MAX_SEATS_NUMBER, MIN_SEATS_NUMBER
 from app.core.db import Base
 from models.base import AuditMixin
 from models.cafes import Cafe
