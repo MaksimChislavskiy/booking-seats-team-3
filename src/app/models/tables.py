@@ -3,13 +3,10 @@ from typing import Optional
 from sqlalchemy import CheckConstraint, ForeignKey, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.constants import (
-    MIN_SEATS_NUMBER,
-    MAX_SEATS_NUMBER,
-)
+from app.core.constants import MIN_SEATS_NUMBER, MAX_SEATS_NUMBER
 from app.core.db import Base
 from models.base import AuditMixin
-from models.cafes import Cafe  # noqa: I001
+from models.cafes import Cafe
 
 
 class Table(Base, AuditMixin):
