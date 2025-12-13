@@ -6,7 +6,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.constants import MAX_SEATS_NUMBER, MIN_SEATS_NUMBER
 from core.db import Base
 from models.base import AuditMixin
-from models.cafes import Cafe
 
 
 class Table(Base, AuditMixin):
@@ -31,7 +30,7 @@ class Table(Base, AuditMixin):
         doc='Идентификатор кафе.',
     )
 
-    cafe: Mapped['Cafe'] = relationship(
+    cafe: Mapped['Cafe'] = relationship(  # noqa: F821
         'Cafe',
         back_populates='tables',
         doc='Все характеристики кафе.',
