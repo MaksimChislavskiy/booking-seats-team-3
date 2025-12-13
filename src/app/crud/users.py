@@ -12,7 +12,8 @@ from app.schemas.users import UserCreate, UserUpdate
 class UserCRUD(BaseCRUD):
     """CRUD-класс для работы с пользователями."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Инициализирует CRUD для модели User."""
         super().__init__(User)
 
     async def get_by_email(
@@ -20,8 +21,9 @@ class UserCRUD(BaseCRUD):
         email: str,
         session: AsyncSession,
     ) -> Optional[User]:
+        """Возвращает пользователя по email."""
         result = await session.execute(
-            select(User).where(User.email == email)
+            select(User).where(User.email == email),
         )
         return result.scalar_one_or_none()
 
@@ -30,8 +32,9 @@ class UserCRUD(BaseCRUD):
         phone: str,
         session: AsyncSession,
     ) -> Optional[User]:
+        """Возвращает пользователя по номеру телефона."""
         result = await session.execute(
-            select(User).where(User.phone == phone)
+            select(User).where(User.phone == phone),
         )
         return result.scalar_one_or_none()
 
@@ -41,17 +44,16 @@ class UserCRUD(BaseCRUD):
         session: AsyncSession,
     ) -> User:
         """Создает нового пользователя с проверками уникальности."""
-
-        # 🔹 Валидация уникальности email
+        # Валидация уникальности email
         if user_in.email:
             if await self.get_by_email(user_in.email, session):
                 raise ValueError("Пользователь с таким email уже существует")
 
-        # 🔹 Валидация уникальности phone
+        #  Валидация уникальности phone
         if user_in.phone:
             if await self.get_by_phone(user_in.phone, session):
                 raise ValueError(
-                    "Пользователь с таким номером телефона уже существует"
+                    "Пользователь с таким номером телефона уже существует",
                 )
 
         user = User(
@@ -73,7 +75,6 @@ class UserCRUD(BaseCRUD):
         session: AsyncSession,
     ) -> User:
         """Обновляет данные пользователя с проверками уникальности."""
-
         data = user_in.model_dump(exclude_unset=True)
 
         # Проверка email при изменении
@@ -85,7 +86,7 @@ class UserCRUD(BaseCRUD):
         if "phone" in data and data["phone"] != user.phone:
             if await self.get_by_phone(data["phone"], session):
                 raise ValueError(
-                    "Пользователь с таким номером телефона уже существует"
+                    "Пользователь с таким номером телефона уже существует",
                 )
 
         for field, value in data.items():

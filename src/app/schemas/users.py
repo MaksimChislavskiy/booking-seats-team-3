@@ -52,7 +52,7 @@ class UserCreate(UserBase):
     )
 
     @model_validator(mode="after")
-    def validate_email_or_phone(self):
+    def validate_email_or_phone(self) -> "UserCreate":
         """Проверяет, что указан email или phone."""
         if not self.email and not self.phone:
             raise ValueError("Необходимо указать email или номер телефона")
