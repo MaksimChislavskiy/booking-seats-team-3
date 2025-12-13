@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.constants import MAX_SEATS_NUMBER, MIN_SEATS_NUMBER
 from core.db import Base
 from models.base import AuditMixin
+from models.cafe import Cafe
 
 
 class Table(Base, AuditMixin):
