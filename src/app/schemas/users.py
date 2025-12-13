@@ -1,6 +1,13 @@
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import (
+    BaseModel,
+    EmailStr,
+    Field,
+    model_validator,
+)
+
+from app.core.constants import USER_PASSWORD_MIN_LENGTH
 
 
 class UserBase(BaseModel):
@@ -10,21 +17,46 @@ class UserBase(BaseModel):
     и частичного обновления данных пользователя.
     """
 
-    username: Optional[str] = Field(None, description="Имя пользователя")
-    email: Optional[EmailStr] = Field(None, description="Email пользователя")
-    phone: Optional[str] = Field(None, description="Номер телефона")
+    username: Optional[str] = Field(
+        None,
+        description="Имя пользователя",
+    )
+    email: Optional[EmailStr] = Field(
+        None,
+        description="Email пользователя",
+    )
+    phone: Optional[str] = Field(
+        None,
+        description="Номер телефона",
+    )
 
 
 class UserCreate(UserBase):
     """Схема для создания нового пользователя.
 
-    Используется при регистрации. Содержит обязательный пароль,
-    который в дальнейшем будет захеширован.
+    Используется при регистрации.
+    Обязательные поля:
+    - username
+    - password
+    - email или phone
     """
 
-    username: str = Field(..., description="Имя пользователя")
-    email: EmailStr = Field(..., description="Email пользователя")
-    password: str = Field(..., min_length=6, description="Пароль")
+    username: str = Field(
+        ...,
+        description="Имя пользователя",
+    )
+    password: str = Field(
+        ...,
+        min_length=USER_PASSWORD_MIN_LENGTH,
+        description="Пароль",
+    )
+
+    @model_validator(mode="after")
+    def validate_email_or_phone(self):
+        """Проверяет, что указан email или phone."""
+        if not self.email and not self.phone:
+            raise ValueError("Необходимо указать email или номер телефона")
+        return self
 
 
 class UserUpdate(UserBase):
@@ -36,7 +68,7 @@ class UserUpdate(UserBase):
 
     password: Optional[str] = Field(
         None,
-        min_length=6,
+        min_length=USER_PASSWORD_MIN_LENGTH,
         description="Новый пароль",
     )
 
@@ -48,7 +80,10 @@ class UserOut(UserBase):
     Не содержит пароль и другие чувствительные данные.
     """
 
-    id: int = Field(..., description="ID пользователя")
+    id: int = Field(
+        ...,
+        description="ID пользователя",
+    )
 
     class Config:
         """Конфигурация Pydantic для работы с ORM."""

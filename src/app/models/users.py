@@ -23,10 +23,10 @@ class User(Base, AuditMixin):
         nullable=False,
     )
 
-    email: Mapped[str] = mapped_column(
+    email: Mapped[str | None] = mapped_column(
         String(EMAIL_MAX_LENGTH),
         unique=True,
-        nullable=False,
+        nullable=True,
     )
 
     phone: Mapped[str | None] = mapped_column(
