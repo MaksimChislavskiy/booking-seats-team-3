@@ -9,7 +9,7 @@ from core.constants import (
 )
 from app.core.db import Base
 from models.base import AuditMixin
-from models.cafes import Cafe
+from models.cafes import Cafe  # noqa: I001
 
 
 class Table(Base, AuditMixin):
@@ -18,26 +18,26 @@ class Table(Base, AuditMixin):
     seat_number: Mapped[int] = mapped_column(
         Integer(),
         nullable=False,
-        doc='Количество мест за столом.'
+        doc='Количество мест за столом.',
     )
 
     description: Mapped[Optional[str]] = mapped_column(
         Text,
         nullable=True,
-        doc='Описание, характеристики стола.'
+        doc='Описание, характеристики стола.',
     )
 
     cafe_id: Mapped[int] = mapped_column(
         ForeignKey('cafes.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
-        doc='Идентификатор кафе.'
+        doc='Идентификатор кафе.',
     )
 
     cafe: Mapped['Cafe'] = relationship(
         'Cafe',
         back_populates='tables',
-        doc='Все характеристики кафе.'
+        doc='Все характеристики кафе.',
     )
 
     __table_args__ = (
