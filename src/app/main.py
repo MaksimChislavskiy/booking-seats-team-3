@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 from fastapi import FastAPI
 
@@ -10,11 +11,11 @@ logger = setup_logging()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> None:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Lifespan-обработчик запуска и остановки приложения."""
-    logger.info("Cafe Booking API starting...")
+    logger.info('Cafe Booking API starting...')
     yield
-    logger.info("Cafe Booking API shutting down...")
+    logger.info('Cafe Booking API shutting down...')
 
 
 app = FastAPI(
