@@ -37,4 +37,6 @@ class BookingRead(BookingBase):
     status: BookingStatus
 
     class Config:
+        """Настройки Pydantic для работы с ORM."""
+
         orm_mode = True
