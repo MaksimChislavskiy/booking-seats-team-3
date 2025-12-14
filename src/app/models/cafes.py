@@ -1,51 +1,51 @@
-from typing import List, Optional
+from typing import List
 
 from sqlalchemy import Integer, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import (
-    CAFE_ADDRESS_MAX_LENGTH,
-    CAFE_NAME_MAX_LENGTH,
-    CAFE_PHONE_MAX_LENGTH,
+    MAX_LENGTH_CAFE_ADDRESS,
+    MAX_LENGTH_CAFE_NAME,
+    MAX_LENGTH_CAFE_PHONE,
+    MAX_LENGTH_UUID,
 )
 from app.core.db import Base
 from app.models.base import AuditMixin
 
 
-class Cafe(Base, AuditMixin):
+class Cafe(AuditMixin, Base):
     """Модель кафе.
 
     Содержит информацию о кафе: название, адрес, контакты, менеджеры.
     """
 
     name: Mapped[str] = mapped_column(
-        String(CAFE_NAME_MAX_LENGTH),
+        String(MAX_LENGTH_CAFE_NAME),
         nullable=False,
         index=True,
     )
     address: Mapped[str] = mapped_column(
-        String(CAFE_ADDRESS_MAX_LENGTH),
+        String(MAX_LENGTH_CAFE_ADDRESS),
         nullable=False,
     )
     phone: Mapped[str] = mapped_column(
-        String(CAFE_PHONE_MAX_LENGTH),
+        String(MAX_LENGTH_CAFE_PHONE),
         nullable=False,
     )
-    description: Mapped[Optional[str]] = mapped_column(
-        Text,  # Для длинных описаний, без ограничения длины
+    description: Mapped[str | None] = mapped_column(
+        Text,
         nullable=True,
     )
-    photo: Mapped[Optional[str]] = mapped_column(
-        String(36),  # UUID храним как строку (36 символов)
+    photo: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_UUID),
         nullable=True,
     )
     managers_id: Mapped[List[int]] = mapped_column(
-        ARRAY(Integer),  # Массив ID менеджеров (int)
+        ARRAY(Integer),
         nullable=False,
-        default=[],  # Пустой массив по умолчанию
+        default=[],
     )
-    # Связи
     tables: Mapped[List["Table"]] = relationship(  # noqa: F821
         "Table",
         back_populates="cafe",
@@ -58,4 +58,10 @@ class Cafe(Base, AuditMixin):
     )
 
     def __repr__(self) -> str:
-        return f"Cafe(id={self.id}, name={self.name})"
+        return (
+            f"Cafe(id={self.id}, name='{self.name}', "
+            f"address='{self.address}')"
+        )
+
+    def __str__(self) -> str:
+        return f"Кафе '{self.name}' (адрес: {self.address})"
