@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sqlalchemy import CheckConstraint, ForeignKey, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -9,7 +7,7 @@ from app.models.base import AuditMixin
 from app.models.cafe import Cafe
 
 
-class Table(Base, AuditMixin):
+class Table(AuditMixin, Base):
     """Информация о столах для бронирования."""
 
     seat_number: Mapped[int] = mapped_column(
@@ -18,7 +16,7 @@ class Table(Base, AuditMixin):
         doc='Количество мест за столом.',
     )
 
-    description: Mapped[Optional[str]] = mapped_column(
+    description: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
         doc='Описание, характеристики стола.',
@@ -34,17 +32,19 @@ class Table(Base, AuditMixin):
     cafe: Mapped['Cafe'] = relationship(
         'Cafe',
         back_populates='tables',
-        doc='Все характеристики кафе.',
+        doc='Кафе, к которому относится стол.',
     )
 
     __table_args__ = (
         CheckConstraint(
-            f'seat_number >= {MIN_SEATS_NUMBER}',
-            name='check_min_seats'),
-        CheckConstraint(
-            f'seat_number <= {MAX_SEATS_NUMBER}',
-            name='check_max_seats'),
+            f'seat_number BETWEEN {MIN_SEATS_NUMBER} AND {MAX_SEATS_NUMBER}',
+            name='check_seat_number_range',
+            )
     )
+
+    def __repr__(self) -> str:
+        return (f'Table({self.id},'
+                f'{self.seat_number} мест в кафе {self.cafe_id}')
 
     def __str__(self) -> str:
         return f'Стол {self.id} в кафе {self.cafe_id}'
