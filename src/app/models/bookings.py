@@ -9,6 +9,7 @@ from app.models.enum import BookingStatus
 
 
 class Booking(AuditMixin, Base):
+    """Модель бронирования столов в ресторане."""
     __tablename__ = 'bookings'
 
     id: Mapped[int] = mapped_column(
@@ -68,7 +69,7 @@ class Booking(AuditMixin, Base):
     def __str__(self) -> str:
         note_str = f", note={self.note}" if self.note else ""
         return (
-            f"Booking {self.id} for user {self.user_id} at cafe {self.cafe_id}, "
-            f"table {self.table_id}, slot {self.slot_id} on {self.date}, status {self.status}"
-            f"{note_str}"
+            f"Booking {self.id} for user {self.user_id} at cafe {self.cafe_id}"
+            f", table {self.table_id}, slot {self.slot_id} on {self.date}, "
+            f"status {self.status}, {note_str}"
         )
