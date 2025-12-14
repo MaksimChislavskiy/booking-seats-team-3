@@ -10,6 +10,8 @@ from app.schemas.bookings import BookingCreate, BookingUpdate
 
 
 async def get_booking(db: AsyncSession, booking_id: int) -> Optional[Booking]:
+    """Получить бронирование по ID."""
+
     result = await db.execute(select(Booking).where(Booking.id == booking_id))
     return result.scalar_one_or_none()
 
@@ -22,6 +24,8 @@ async def get_bookings(
     cafe_id: Optional[int] = None,
     date_filter: Optional[date] = None,
 ) -> List[Booking]:
+    """Получить список бронирований с возможностью фильтрации."""
+
     query = select(Booking)
     if user_id:
         query = query.where(Booking.user_id == user_id)
@@ -34,6 +38,8 @@ async def get_bookings(
 
 
 async def create_booking(db: AsyncSession, booking: BookingCreate) -> Booking:
+    """Создать новое бронирование."""
+
     db_booking = Booking(
         user_id=booking.user_id,
         cafe_id=booking.cafe_id,
@@ -52,6 +58,8 @@ async def create_booking(db: AsyncSession, booking: BookingCreate) -> Booking:
 async def update_booking(
     db: AsyncSession, booking_id: int, updates: BookingUpdate
 ) -> Optional[Booking]:
+    """Изменить существующее бронирование."""
+
     db_booking = await get_booking(db, booking_id)
     if not db_booking:
         return None
@@ -67,6 +75,8 @@ async def update_booking(
 
 
 async def delete_booking(db: AsyncSession, booking_id: int) -> bool:
+    """Удалить бронирование по ID."""
+
     db_booking = await get_booking(db, booking_id)
     if not db_booking:
         return False
