@@ -26,15 +26,19 @@ Thumbs.db
 # Git
 .git
 .gitignore
+.gitattributes
+.github/
 
 # Docker
 Dockerfile
-docker-compose.yml
+docker-compose*.yml
+docker-compose*.yaml
 
 # Logs
 *.log
 
 # Test and coverage
+tests/
 .coverage
 htmlcov/
 .tox/
@@ -44,6 +48,8 @@ htmlcov/
 build/
 dist/
 *.egg-info/
+node_modules/
+
 
 # Media and static (if generated)
 media/
@@ -54,3 +60,15 @@ static/
 *.env
 .env.*
 secrets/
+.env-example
+.env.sample
+*.env.example
+
+# ruff
+ruff.toml
+.ruff_cache/
+
+.pre-commit-config.yaml
+
+
+README*

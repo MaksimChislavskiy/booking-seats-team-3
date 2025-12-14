@@ -20,7 +20,11 @@ class Base(DeclarativeBase):
     def __tablename__(cls) -> str:  # noqa: N805
         return cls.__name__.lower()
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+        autoincrement=True,
+        index=True,
+    )
 
 
 engine = create_async_engine(settings.database_url)
