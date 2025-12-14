@@ -10,6 +10,7 @@ from app.models.enum import BookingStatus
 
 class Booking(AuditMixin, Base):
     """Модель бронирования столов в ресторане."""
+
     __tablename__ = 'bookings'
 
     id: Mapped[int] = mapped_column(
