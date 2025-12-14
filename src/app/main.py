@@ -1,7 +1,27 @@
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
+
 from fastapi import FastAPI
 
 from app.api.routers import main_router
 from app.core.config import settings
+from app.core.logging import setup_logging
 
-app = FastAPI(title=settings.app_title, description=settings.app_description)
+logger = setup_logging()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Lifespan-обработчик запуска и остановки приложения."""
+    logger.info('Cafe Booking API starting...')
+    yield
+    logger.info('Cafe Booking API shutting down...')
+
+
+app = FastAPI(
+    title=settings.app_title,
+    description=settings.app_description,
+    lifespan=lifespan,
+)
+
 app.include_router(main_router)
