@@ -23,7 +23,7 @@ class Table(AuditMixin, Base):
     )
 
     cafe_id: Mapped[int] = mapped_column(
-        ForeignKey('cafes.id', ondelete='CASCADE'),
+        ForeignKey('cafe.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
         doc='Идентификатор кафе.',
@@ -43,8 +43,9 @@ class Table(AuditMixin, Base):
     )
 
     def __repr__(self) -> str:
-        return (f'Table({self.id},'
-                f'{self.seat_number} мест в кафе {self.cafe_id}')
+        return (f'Table id={self.id}, '
+                f'seat_number={self.seat_number}, '
+                f'cafe_id={self.cafe_id}')
 
     def __str__(self) -> str:
         return f'Стол {self.id} в кафе {self.cafe_id}'
