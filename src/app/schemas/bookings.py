@@ -6,6 +6,8 @@ from app.models.enum import BookingStatus
 
 
 class BookingBase(BaseModel):
+    """Базовая схема бронирования."""
+
     user_id: int
     cafe_id: int
     table_id: int
@@ -14,16 +16,21 @@ class BookingBase(BaseModel):
     note: Optional[str] = None
 
 
-class BookingCreate(BookingBase):  # для POST
+class BookingCreate(BookingBase):
+    """Для создания бронирования. (POST)"""
+
     pass  # при создании статус всегда pending
 
 
-class BookingUpdate(BaseModel):  # для PATCH/PUT
+class BookingUpdate(BaseModel):
+    """Для обновления бронирования. (PATCH/PUT)"""
+
     status: Optional[BookingStatus] = None
     note: Optional[str] = None
 
 
-class BookingRead(BookingBase):  # для ответа с id и статусом
+class BookingRead(BookingBase):
+    """Схема бронирования для ответа (GET)."""
     id: int
     status: BookingStatus
 
