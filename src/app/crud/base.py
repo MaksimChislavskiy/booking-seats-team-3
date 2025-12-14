@@ -5,10 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class BaseCRUD:
-    """Минимальный базовый CRUD.
+    """Базовый CRUD-класс.
 
-    Содержит общие операции, которые применимы
-    ко всем сущностям проекта.
+    Содержит стандартные операции Create, Read, Update, Delete,
+    применимые ко всем сущностям проекта.
     """
 
     def __init__(self, model: Type) -> None:
@@ -25,6 +25,41 @@ class BaseCRUD:
             select(self.model).where(self.model.id == obj_id),
         )
         return result.scalar_one_or_none()
+
+    async def get_multi(
+        self,
+        session: AsyncSession,
+    ) -> list[Any]:
+        """Получает список активных объектов."""
+        result = await session.execute(
+            select(self.model).where(self.model.active.is_(True)),
+        )
+        return result.scalars().all()
+
+    async def create(
+        self,
+        obj: Any,
+        session: AsyncSession,
+    ) -> Any:
+        """Создает объект."""
+        session.add(obj)
+        await session.commit()
+        await session.refresh(obj)
+        return obj
+
+    async def update(
+        self,
+        obj: Any,
+        data: dict[str, Any],
+        session: AsyncSession,
+    ) -> Any:
+        """Обновляет объект."""
+        for field, value in data.items():
+            setattr(obj, field, value)
+
+        await session.commit()
+        await session.refresh(obj)
+        return obj
 
     async def soft_delete(
         self,

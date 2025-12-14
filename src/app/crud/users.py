@@ -44,12 +44,12 @@ class UserCRUD(BaseCRUD):
         session: AsyncSession,
     ) -> User:
         """Создает нового пользователя с проверками уникальности."""
-        # Валидация уникальности email
+        # Проверка уникальности email
         if user_in.email:
             if await self.get_by_email(user_in.email, session):
                 raise ValueError("Пользователь с таким email уже существует")
 
-        #  Валидация уникальности phone
+        # Проверка уникальности phone
         if user_in.phone:
             if await self.get_by_phone(user_in.phone, session):
                 raise ValueError(
@@ -63,10 +63,7 @@ class UserCRUD(BaseCRUD):
             password_hash=get_password_hash(user_in.password),
         )
 
-        session.add(user)
-        await session.commit()
-        await session.refresh(user)
-        return user
+        return await super().create(user, session)
 
     async def update(
         self,
@@ -89,12 +86,8 @@ class UserCRUD(BaseCRUD):
                     "Пользователь с таким номером телефона уже существует",
                 )
 
-        for field, value in data.items():
-            if field == "password":
-                user.password_hash = get_password_hash(value)
-            else:
-                setattr(user, field, value)
+        # Хеширование пароля
+        if "password" in data:
+            data["password_hash"] = get_password_hash(data.pop("password"))
 
-        await session.commit()
-        await session.refresh(user)
-        return user
+        return await super().update(user, data, session)

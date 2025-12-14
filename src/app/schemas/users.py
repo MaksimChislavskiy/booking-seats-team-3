@@ -7,7 +7,7 @@ from pydantic import (
     model_validator,
 )
 
-from app.core.constants import USER_PASSWORD_MIN_LENGTH
+from app.core.constants import MIN_LENGTH_USER_PASSWORD
 
 
 class UserBase(BaseModel):
@@ -47,7 +47,7 @@ class UserCreate(UserBase):
     )
     password: str = Field(
         ...,
-        min_length=USER_PASSWORD_MIN_LENGTH,
+        min_length=MIN_LENGTH_USER_PASSWORD,
         description="Пароль",
     )
 
@@ -68,7 +68,7 @@ class UserUpdate(UserBase):
 
     password: Optional[str] = Field(
         None,
-        min_length=USER_PASSWORD_MIN_LENGTH,
+        min_length=MIN_LENGTH_USER_PASSWORD,
         description="Новый пароль",
     )
 
