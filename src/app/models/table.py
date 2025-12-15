@@ -3,8 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import MAX_SEATS_NUMBER, MIN_SEATS_NUMBER
 from app.core.db import Base
-from app.models.base import AuditMixin
-from app.models.cafe import Cafe
+from app.models import AuditMixin, Cafe
 
 
 class Table(AuditMixin, Base):
@@ -35,17 +34,17 @@ class Table(AuditMixin, Base):
         doc='Кафе, к которому относится стол.',
     )
 
-    __table_args__ = (
-        CheckConstraint(
-            f'seat_number BETWEEN {MIN_SEATS_NUMBER} AND {MAX_SEATS_NUMBER}',
-            name='check_seat_number_range',
-            )
+    __table_args__ = CheckConstraint(
+        f'seat_number BETWEEN {MIN_SEATS_NUMBER} AND {MAX_SEATS_NUMBER}',
+        name='check_seat_number_range',
     )
 
     def __repr__(self) -> str:
-        return (f'Table id={self.id}, '
-                f'seat_number={self.seat_number}, '
-                f'cafe_id={self.cafe_id}')
+        return (
+            f'Table id={self.id}, '
+            f'seat_number={self.seat_number}, '
+            f'cafe_id={self.cafe_id}'
+        )
 
     def __str__(self) -> str:
         return f'Стол {self.id} в кафе {self.cafe_id}'

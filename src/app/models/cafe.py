@@ -11,7 +11,7 @@ from app.core.constants import (
     MAX_LENGTH_UUID,
 )
 from app.core.db import Base
-from app.models.base import AuditMixin
+from app.models import AuditMixin
 
 if TYPE_CHECKING:
     from app.models import Booking, Slot, Table, User

@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy.orm import Mapped, relationship
 
 from app.core.db import Base
-from app.models.base import AuditMixin
+from app.models import AuditMixin
 
 if TYPE_CHECKING:
-    from app.models.cafes import Cafe
+    from app.models import Cafe
 
 
 class User(AuditMixin, Base):
