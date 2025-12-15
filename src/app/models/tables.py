@@ -23,7 +23,7 @@ class Table(AuditMixin, Base):
     )
 
     cafe_id: Mapped[int] = mapped_column(
-        ForeignKey('cafe.id', ondelete='NO ACTION'),
+        ForeignKey('cafe.id', ondelete='RESTRICT'),
         nullable=False,
         index=True,
         doc='Идентификатор кафе.',
