@@ -9,9 +9,7 @@ from app.models.enum import BookingStatus
 
 
 class TableSlot(Base):
-    """
-    Связка стола и временного слота.
-    """
+    """Связка стола и временного слота."""
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -38,9 +36,7 @@ class TableSlot(Base):
 
 
 class Booking(Base, AuditMixin):
-    """
-    Бронирование столов в ресторане.
-    """
+    """Бронирование столов в ресторане."""
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
