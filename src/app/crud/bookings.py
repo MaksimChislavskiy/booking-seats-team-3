@@ -1,10 +1,12 @@
 from datetime import date
 from typing import List, Optional
+
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.models.enum import BookingStatus
 from app.models.bookings import Booking
+from app.models.enum import BookingStatus
 from app.schemas.bookings import BookingCreate, BookingUpdate
 
 
@@ -36,6 +38,11 @@ async def get_bookings(
 
 async def create_booking(db: AsyncSession, booking: BookingCreate) -> Booking:
     """Создать новое бронирование."""
+    if booking.date < date.today():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Нельзя создать бронирование на прошедшую дату',
+        )
     db_booking = Booking(
         user_id=booking.user_id,
         cafe_id=booking.cafe_id,
@@ -52,7 +59,9 @@ async def create_booking(db: AsyncSession, booking: BookingCreate) -> Booking:
 
 
 async def update_booking(
-    db: AsyncSession, booking_id: int, updates: BookingUpdate
+    db: AsyncSession,
+    booking_id: int,
+    updates: BookingUpdate
 ) -> Optional[Booking]:
     """Изменить существующее бронирование."""
     db_booking = await get_booking(db, booking_id)
