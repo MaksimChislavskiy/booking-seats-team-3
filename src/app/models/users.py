@@ -12,6 +12,8 @@ if TYPE_CHECKING:
 
 
 class User(AuditMixin, Base):
+    """Заглушка."""
+
     # остальные поля...
 
     cafe: Mapped[Cafe | None] = relationship(

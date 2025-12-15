@@ -14,7 +14,7 @@ from app.core.db import Base
 from app.models.base import AuditMixin
 
 if TYPE_CHECKING:
-    from app.models import Slot, Table, User, Booking
+    from app.models import Booking, Slot, Table, User
 
 
 class Cafe(AuditMixin, Base):
@@ -90,9 +90,7 @@ class Cafe(AuditMixin, Base):
 
     def __repr__(self) -> str:
         return (
-            f'<Cafe id={self.id} '
-            f'name="{self.name}" '
-            f'address="{self.address}">'
+            f'<Cafe id={self.id} name="{self.name}" address="{self.address}">'
         )
 
     def __str__(self) -> str:
