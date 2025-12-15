@@ -1,3 +1,4 @@
+# TODO: Перепроверить схемы по Swagger
 from typing import Optional
 
 from pydantic import (

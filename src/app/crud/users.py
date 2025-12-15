@@ -1,8 +1,10 @@
+# TODO: Перепроверить CRUD после создания CRUDBase
 from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+# FIXME: Создать этот файл и описать метод
 from app.core.security import get_password_hash
 from app.crud.base import BaseCRUD
 from app.models.users import User
@@ -47,13 +49,13 @@ class UserCRUD(BaseCRUD):
         # Проверка уникальности email
         if user_in.email:
             if await self.get_by_email(user_in.email, session):
-                raise ValueError("Пользователь с таким email уже существует")
+                raise ValueError('Пользователь с таким email уже существует')
 
         # Проверка уникальности phone
         if user_in.phone:
             if await self.get_by_phone(user_in.phone, session):
                 raise ValueError(
-                    "Пользователь с таким номером телефона уже существует",
+                    'Пользователь с таким номером телефона уже существует',
                 )
 
         user = User(
@@ -75,19 +77,19 @@ class UserCRUD(BaseCRUD):
         data = user_in.model_dump(exclude_unset=True)
 
         # Проверка email при изменении
-        if "email" in data and data["email"] != user.email:
-            if await self.get_by_email(data["email"], session):
-                raise ValueError("Пользователь с таким email уже существует")
+        if 'email' in data and data['email'] != user.email:
+            if await self.get_by_email(data['email'], session):
+                raise ValueError('Пользователь с таким email уже существует')
 
         # Проверка phone при изменении
-        if "phone" in data and data["phone"] != user.phone:
-            if await self.get_by_phone(data["phone"], session):
+        if 'phone' in data and data['phone'] != user.phone:
+            if await self.get_by_phone(data['phone'], session):
                 raise ValueError(
-                    "Пользователь с таким номером телефона уже существует",
+                    'Пользователь с таким номером телефона уже существует',
                 )
 
         # Хеширование пароля
-        if "password" in data:
-            data["password_hash"] = get_password_hash(data.pop("password"))
+        if 'password' in data:
+            data['password_hash'] = get_password_hash(data.pop('password'))
 
         return await super().update(user, data, session)

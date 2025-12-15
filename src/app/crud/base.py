@@ -1,3 +1,5 @@
+# TODO: Задачу доделывает @Khoetskiy
+
 from typing import Any, Optional, Type
 
 from sqlalchemy import select
