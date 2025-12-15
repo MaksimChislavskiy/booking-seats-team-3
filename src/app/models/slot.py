@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from app.models import Cafe
 
 
-class Slot(AuditMixin, Base):
+class Slot(Base, AuditMixin):
     """Временной слот бронирования для кафе.
 
     Slot - это временной интервал,

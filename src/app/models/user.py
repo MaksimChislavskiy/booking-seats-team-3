@@ -70,11 +70,13 @@ class User(Base, AuditMixin):
         nullable=False,
     )
     role: Mapped[UserRole] = mapped_column(
-        SQLEnum(UserRole, name='user_role_enum'),
+        SQLEnum(
+            UserRole,
+            name='user_role_enum',
+        ),
         nullable=False,
-        server_default=UserRole.USER.value,
     )
-    cafe: Mapped[Cafe | None] = relationship(
+    cafe: Mapped['Cafe'] = relationship(
         'Cafe',
         secondary='cafe_managers',
         back_populates='managers',

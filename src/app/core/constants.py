@@ -15,9 +15,9 @@ LOG_MAX_BYTES = 10 * 1024 * 1024  # 10 МБ
 LOG_BACKUP_COUNT = 10
 
 # --- User ---
-ROLE_ADMIN = 'Администратор'
-ROLE_MANAGER = 'Менеджер'
-ROLE_USER = 'Пользователь'
+ROLE_ADMIN = 'admin'
+ROLE_MANAGER = 'manager'
+ROLE_USER = 'user'
 MAX_LENGTH_USER_USERNAME = 150
 MAX_LENGTH_USER_EMAIL = 255
 MAX_LENGTH_USER_PHONE = 50

@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String, UniqueConstraint
+from sqlalchemy import (
+    # ForeignKey,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import (
@@ -8,7 +12,7 @@ from app.core.constants import (
     MAX_LENGTH_CAFE_DESCRIPTION,
     MAX_LENGTH_CAFE_NAME,
     MAX_LENGTH_CAFE_PHONE,
-    MAX_LENGTH_UUID,
+    # MAX_LENGTH_UUID,
 )
 from app.core.db import Base
 from app.models import AuditMixin
@@ -17,7 +21,7 @@ if TYPE_CHECKING:
     from app.models import Booking, Slot, Table, User
 
 
-class Cafe(AuditMixin, Base):
+class Cafe(Base, AuditMixin):
     """Модель кафе.
 
     Представляет кафе в системе бронирования мест. Содержит информацию
@@ -55,11 +59,12 @@ class Cafe(AuditMixin, Base):
         String(MAX_LENGTH_CAFE_DESCRIPTION),
         nullable=True,
     )
-    photo_id: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_UUID),
-        ForeignKey('media.id', ondelete='RESTRICT'),
-        nullable=True,
-    )
+    # FIXME: Раскоментировать, когда модель media будет добавлена + миграцию
+    # photo_id: Mapped[str | None] = mapped_column(
+    #     String(MAX_LENGTH_UUID),
+    #     ForeignKey('media.id', ondelete='RESTRICT'),
+    #     nullable=True,
+    # )
     managers: Mapped[list['User']] = relationship(
         'User',
         secondary='cafe_managers',
@@ -82,10 +87,12 @@ class Cafe(AuditMixin, Base):
         lazy='selectin',
     )
 
-    __table_args__ = UniqueConstraint(
-        'name',
-        'address',
-        name='uq_cafe_name_address',
+    __table_args__ = (
+        UniqueConstraint(
+            'name',
+            'address',
+            name='uq_cafe_name_address',
+        ),
     )
 
     def __repr__(self) -> str:

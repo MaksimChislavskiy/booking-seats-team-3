@@ -6,7 +6,7 @@ from app.core.db import Base
 from app.models import AuditMixin, Cafe
 
 
-class Table(AuditMixin, Base):
+class Table(Base, AuditMixin):
     """Информация о столах для бронирования."""
 
     seat_number: Mapped[int] = mapped_column(
@@ -34,9 +34,11 @@ class Table(AuditMixin, Base):
         doc='Кафе, к которому относится стол.',
     )
 
-    __table_args__ = CheckConstraint(
-        f'seat_number BETWEEN {MIN_SEATS_NUMBER} AND {MAX_SEATS_NUMBER}',
-        name='check_seat_number_range',
+    __table_args__ = (
+        CheckConstraint(
+            f'seat_number BETWEEN {MIN_SEATS_NUMBER} AND {MAX_SEATS_NUMBER}',
+            name='check_seat_number_range',
+        ),
     )
 
     def __repr__(self) -> str:
