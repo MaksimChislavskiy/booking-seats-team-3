@@ -61,7 +61,7 @@ async def create_booking(db: AsyncSession, booking: BookingCreate) -> Booking:
 async def update_booking(
     db: AsyncSession,
     booking_id: int,
-    updates: BookingUpdate
+    updates: BookingUpdate,
 ) -> Optional[Booking]:
     """Изменить существующее бронирование."""
     db_booking = await get_booking(db, booking_id)
