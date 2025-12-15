@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     app_description: str = 'Сервис для бронирования мест в кафе'
     first_superuser_email: EmailStr | None = None
     first_superuser_password: str | None = None
+    log_level: str = 'INFO'
 
     postgres_user: str
     postgres_password: str
