@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -14,18 +14,27 @@ from app.core.db import Base
 from app.models.base import AuditMixin
 
 if TYPE_CHECKING:
-    from app.models import Slot, Table, User
+    from app.models import Slot, Table, User, Booking
 
 
 class Cafe(AuditMixin, Base):
     """Модель кафе.
 
-    Содержит информацию о кафе: название, адрес, контакты, менеджеры.
-    """
+    Представляет кафе в системе бронирования мест. Содержит информацию
+    об основных параметрах кафе, связях с менеджерами, столами и слотами.
 
-    __table_args__ = (
-        UniqueConstraint('name', 'address', name='uq_cafe_name_address')
-    )
+    Attributes:
+        name: Название кафе.
+        address: Адрес кафе.
+        phone: Номер телефона кафе.
+        description: Описание кафе (опционально).
+        photo_id: Идентификатор фотографии кафе (опционально).
+        managers: Список менеджеров кафе.
+        tables: Список столов в кафе.
+        slots: Список временных слотов кафе.
+        booking: Список бронирований кафе.
+
+    """
 
     name: Mapped[str] = mapped_column(
         String(MAX_LENGTH_CAFE_NAME),
@@ -48,34 +57,42 @@ class Cafe(AuditMixin, Base):
     )
     photo_id: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_UUID),
-        ForeignKey('files.id', ondelete='SET NULL'),
+        ForeignKey('media.id', ondelete='RESTRICT'),
         nullable=True,
     )
-    # TODO: Добавить relationship для booking, когда будет создана модель
-    # bookings: Mapped[List["Booking"]] = relationship(
-    #     "Booking",
-    #     back_populates="cafe",
-    #     cascade="all, delete-orphan",
-    # )
-    managers: Mapped[List['User']] = relationship(
+    managers: Mapped[list['User']] = relationship(
         'User',
-        back_populates='managed_cafe',
+        secondary='cafe_managers',
+        back_populates='cafe',
+        lazy='selectin',
     )
-    tables: Mapped[List['Table']] = relationship(
+    tables: Mapped[list['Table']] = relationship(
         'Table',
         back_populates='cafe',
-        cascade='all, delete-orphan',
+        lazy='selectin',
     )
-    slots: Mapped[List['Slot']] = relationship(
+    slots: Mapped[list['Slot']] = relationship(
         'Slot',
         back_populates='cafe',
-        cascade='all, delete-orphan',
+        lazy='selectin',
+    )
+    bookings: Mapped[list['Booking']] = relationship(
+        'Booking',
+        back_populates='cafe',
+        lazy='selectin',
+    )
+
+    __table_args__ = UniqueConstraint(
+        'name',
+        'address',
+        name='uq_cafe_name_address',
     )
 
     def __repr__(self) -> str:
         return (
-            f'Cafe(id={self.id}, name="{self.name}", '
-            f'address="{self.address}")'
+            f'<Cafe id={self.id} '
+            f'name="{self.name}" '
+            f'address="{self.address}">'
         )
 
     def __str__(self) -> str:
