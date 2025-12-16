@@ -3,7 +3,6 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.core.db import get_async_session
 from app.crud.cafe import (
     create_cafe,
     delete_cafe,
@@ -12,6 +11,8 @@ from app.crud.cafe import (
     update_cafe,
 )
 from app.schemas.cafe import CafeCreate, CafeRead, CafeUpdate
+
+from src.app.core.db import get_async_session
 
 router = APIRouter(tags=["Кафе"])
 

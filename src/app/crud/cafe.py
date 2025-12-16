@@ -3,8 +3,9 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.models.cafes import Cafe
 from app.schemas.cafe import CafeCreate, CafeUpdate
+
+from src.app.models.cafes import Cafe
 
 
 async def create_cafe(db: AsyncSession, cafe_in: CafeCreate) -> Cafe:
