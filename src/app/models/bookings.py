@@ -1,7 +1,13 @@
 from datetime import date
 
 from sqlalchemy import (
-    CheckConstraint, Date, Enum, ForeignKey, Text, text, UniqueConstraint,
+    CheckConstraint,
+    Date,
+    Enum,
+    ForeignKey,
+    Text,
+    UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,12 +30,12 @@ class TableSlot(Base):
     )
 
     booking_id: Mapped[int | None] = mapped_column(
-        ForeignKey("booking.id", ondelete="SET NULL"),
+        ForeignKey('booking.id', ondelete='SET NULL'),
         nullable=True,
     )
 
-    booking: Mapped["Booking"] = relationship(
-        back_populates="table_slot",
+    booking: Mapped['Booking'] = relationship(
+        back_populates='table_slot',
         uselist=False,
     )
 
