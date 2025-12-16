@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import (
+from src.app.api.endpoints import (
     actions_router,
     auth_router,
     bookings_router,
