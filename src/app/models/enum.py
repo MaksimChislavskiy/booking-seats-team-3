@@ -1,9 +1,11 @@
-import enum
+from enum import StrEnum
+
+from app.core.constants import CANCELLED, CONFIRMED, PENDING
 
 
-class BookingStatus(str, enum.Enum):
+class BookingStatus(StrEnum):
     """Статусы бронирования."""
 
-    pending = 'pending'
-    confirmed = 'confirmed'
-    cancelled = 'cancelled'
+    pending = PENDING
+    confirmed = CONFIRMED
+    cancelled = CANCELLED

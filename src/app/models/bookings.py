@@ -1,8 +1,11 @@
-import datetime
+from datetime import date
 
-from sqlalchemy import Date, Enum, ForeignKey, Text, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, validates
+from sqlalchemy import (
+    CheckConstraint, Date, Enum, ForeignKey, Text, text, UniqueConstraint
+)
+from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.constants import PENDING
 from app.core.db import Base
 from app.models.base import AuditMixin
 from app.models.enum import BookingStatus
@@ -38,8 +41,6 @@ class TableSlot(Base):
 class Booking(Base, AuditMixin):
     """Бронирование столов в ресторане."""
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-
     user_id: Mapped[int] = mapped_column(
         ForeignKey('user.id'),
         nullable=False,
@@ -55,26 +56,27 @@ class Booking(Base, AuditMixin):
         nullable=False,
     )
 
-    date: Mapped[datetime.date] = mapped_column(
+    date: Mapped[date] = mapped_column(
         Date,
         nullable=False,
     )
 
-    @validates('date')
-    def validate_date(self, key: str, value: datetime.date) -> datetime.date:
-        """Проверка, что дата бронирования не в прошлом."""
-        if value < datetime.date.today():
-            raise ValueError('Нельзя создать бронирование на прошедшую дату')
-        return value
-
     status: Mapped[BookingStatus] = mapped_column(
         Enum(BookingStatus, name='booking_status'),
         nullable=False,
+        server_default=text("'pending'"),
     )
 
-    note: Mapped[str | None] = mapped_column(Text)
+    note: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
 
     __table_args__ = (
+        CheckConstraint(
+            "date >= CURRENT_DATE",
+            name="ck_booking_date_not_past",
+        ),
         UniqueConstraint(
             'table_slot_id',
             'date',
@@ -87,8 +89,7 @@ class Booking(Base, AuditMixin):
             f'Booking id={self.id} '
             f'user_id={self.user_id} '
             f'cafe_id={self.cafe_id} '
-            f'table_id={self.table_id} '
-            f'slot_id={self.slot_id} '
+            f'table_slot_id={self.table_slot_id} '
             f'date={self.date} '
             f'status={self.status}'
         )
