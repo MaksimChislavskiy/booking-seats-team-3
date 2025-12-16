@@ -1,7 +1,7 @@
 from datetime import date
 
 from sqlalchemy import (
-    CheckConstraint, Date, Enum, ForeignKey, Text, text, UniqueConstraint,
+    CheckConstraint, Date, Enum, ForeignKey, Text, UniqueConstraint, text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
