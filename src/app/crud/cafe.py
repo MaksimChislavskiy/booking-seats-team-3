@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.models.cafes import Cafe
-from src.app.schemas.cafes import CafeCreate, CafeUpdate
+from app.schemas.cafe import CafeCreate, CafeUpdate
 
 
 async def create_cafe(db: AsyncSession, cafe_in: CafeCreate) -> Cafe:

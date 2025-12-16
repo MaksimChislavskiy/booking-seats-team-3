@@ -4,14 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.core.db import get_async_session
-from src.app.crud.cafes import (
+from app.crud.cafe import (
     create_cafe,
     delete_cafe,
     get_cafe_by_id,
     get_cafes_list,
     update_cafe,
 )
-from src.app.schemas.cafes import CafeCreate, CafeRead, CafeUpdate
+from app.schemas.cafe import CafeCreate, CafeRead, CafeUpdate
 
 router = APIRouter(tags=["Кафе"])
 

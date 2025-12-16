@@ -1,7 +1,7 @@
 from .actions import router as actions_router
 from .auth import router as auth_router
 from .bookings import router as bookings_router
-from .cafes import router as cafes_router
+from .cafe import router as cafes_router
 from .dishes import router as dishes_router
 from .media import router as media_router
 from .slots import router as slots_router
