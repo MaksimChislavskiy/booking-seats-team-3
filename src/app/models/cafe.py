@@ -75,11 +75,13 @@ class Cafe(Base, AuditMixin):
         'Table',
         back_populates='cafe',
         lazy='selectin',
+        cascade="all, delete-orphan",
     )
     slots: Mapped[list['Slot']] = relationship(
         'Slot',
         back_populates='cafe',
         lazy='selectin',
+        cascade="all, delete-orphan",
     )
     bookings: Mapped[list['Booking']] = relationship(
         'Booking',
