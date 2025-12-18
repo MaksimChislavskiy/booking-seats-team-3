@@ -42,7 +42,6 @@ async def create_booking(
     user_id: int,
 ) -> Booking:
     """Создать бронирование."""
-
     if booking_in.booking_date < date.today():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
