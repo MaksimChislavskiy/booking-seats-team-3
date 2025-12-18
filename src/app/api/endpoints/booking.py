@@ -4,21 +4,18 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_async_session
 from app.core.auth import get_current_user
+from app.core.db import get_async_session
+
 # переделаю когда будет аутентификация
 from app.crud.booking import (
+    create_booking,
     get_booking,
     get_bookings,
-    create_booking,
     update_booking,
 )
 from app.models.users import User
-from app.schemas.booking import (
-    BookingRead,
-    BookingCreate,
-    BookingUpdate,
-)
+from app.schemas.booking import BookingCreate, BookingRead, BookingUpdate
 
 bookings_router = APIRouter()
 
@@ -44,8 +41,7 @@ async def get_booking_list(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
 ) -> List[BookingRead]:
-    """
-    Получение списка бронирований.
+    """Получение списка бронирований.
 
     - Администраторы и менеджеры:
       - получают все бронирования
@@ -87,8 +83,7 @@ async def create_booking_endpoint(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
 ) -> BookingRead:
-    """
-    Создание нового бронирования.
+    """Создание нового бронирования.
 
     Только для авторизованных пользователей.
     """
@@ -115,8 +110,7 @@ async def get_booking_by_id(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
 ) -> BookingRead:
-    """
-    Получение информации о бронировании по ID.
+    """Получение информации о бронировании по ID.
 
     - Администраторы и менеджеры: видят все бронирования
     - Обычные пользователи: видят только свои
@@ -149,8 +143,7 @@ async def update_booking_endpoint(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
 ) -> BookingRead:
-    """
-    Обновление информации о бронировании по ID.
+    """Обновление информации о бронировании по ID.
 
     - Администраторы и менеджеры видят все бронирования
     - Обычные пользователи видят только свои

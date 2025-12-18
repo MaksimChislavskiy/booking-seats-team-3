@@ -1,19 +1,11 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import (
-    # ForeignKey,
-    String,
-    UniqueConstraint,
-)
+from sqlalchemy import String, UniqueConstraint  # ForeignKey,
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.constants import (
-    MAX_LENGTH_CAFE_ADDRESS,
-    MAX_LENGTH_CAFE_DESCRIPTION,
-    MAX_LENGTH_CAFE_NAME,
-    MAX_LENGTH_CAFE_PHONE,
-    # MAX_LENGTH_UUID,
-)
+from app.core.constants import (MAX_LENGTH_CAFE_ADDRESS,  # MAX_LENGTH_UUID,
+                                MAX_LENGTH_CAFE_DESCRIPTION,
+                                MAX_LENGTH_CAFE_NAME, MAX_LENGTH_CAFE_PHONE)
 from app.core.db import Base
 from app.models import AuditMixin
 

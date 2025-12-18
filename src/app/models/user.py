@@ -1,20 +1,16 @@
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, String
+from sqlalchemy import CheckConstraint
 from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.constants import (
-    MAX_LENGTH_USER_EMAIL,
-    MAX_LENGTH_USER_PASSWORD_HASH,
-    MAX_LENGTH_USER_PHONE,
-    MAX_LENGTH_USER_TG_ID,
-    MAX_LENGTH_USER_USERNAME,
-    ROLE_ADMIN,
-    ROLE_MANAGER,
-    ROLE_USER,
-)
+from app.core.constants import (MAX_LENGTH_USER_EMAIL,
+                                MAX_LENGTH_USER_PASSWORD_HASH,
+                                MAX_LENGTH_USER_PHONE, MAX_LENGTH_USER_TG_ID,
+                                MAX_LENGTH_USER_USERNAME, ROLE_ADMIN,
+                                ROLE_MANAGER, ROLE_USER)
 from app.core.db import Base
 from app.models import AuditMixin
 

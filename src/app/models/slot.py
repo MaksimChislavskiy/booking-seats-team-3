@@ -1,13 +1,8 @@
 from datetime import time
 from typing import TYPE_CHECKING
 
-from sqlalchemy import (
-    CheckConstraint,
-    ForeignKey,
-    String,
-    Time,
-    UniqueConstraint,
-)
+from sqlalchemy import (CheckConstraint, ForeignKey, String, Time,
+                        UniqueConstraint)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import MAX_LENGTH_SLOT_DESCRIPTION
