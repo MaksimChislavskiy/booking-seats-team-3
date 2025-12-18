@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.models.bookings import Booking
+from app.models.bookings import Booking, TableSlot
 from app.models.enum import BookingStatus
 from app.schemas.bookings import BookingCreate, BookingUpdate
 
@@ -36,26 +36,49 @@ async def get_bookings(
     return result.scalars().all()
 
 
-async def create_booking(db: AsyncSession, booking: BookingCreate) -> Booking:
-    """Создать новое бронирование."""
-    if booking.date < date.today():
+async def create_booking(
+    db: AsyncSession,
+    booking_in: BookingCreate,
+    user_id: int,
+) -> Booking:
+    """Создать бронирование."""
+
+    if booking_in.booking_date < date.today():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Нельзя создать бронирование на прошедшую дату',
+            detail="Нельзя создать бронирование на прошедшую дату",
         )
-    db_booking = Booking(
-        user_id=booking.user_id,
-        cafe_id=booking.cafe_id,
-        table_id=booking.table_id,
-        slot_id=booking.slot_id,
-        date=booking.date,
+
+    booking = Booking(
+        user_id=user_id,
+        cafe_id=booking_in.cafe_id,
+        guest_number=booking_in.guest_number,
+        note=booking_in.note,
+        date=booking_in.booking_date,
         status=BookingStatus.pending,
-        note=booking.note,
     )
-    db.add(db_booking)
+    db.add(booking)
+    await db.flush()
+
+    for ts in booking_in.tables_slots:
+        table_slot = await db.get(
+            TableSlot,
+            {
+                "table_id": ts.table_id,
+                "slot_id": ts.slot_id,
+            },
+        )
+        if not table_slot:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Указанный слот не существует",
+            )
+        table_slot.booking_id = booking.id
+
     await db.commit()
-    await db.refresh(db_booking)
-    return db_booking
+    await db.refresh(booking)
+    return booking
+
 
 
 async def update_booking(
