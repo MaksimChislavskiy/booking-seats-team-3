@@ -7,14 +7,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
 from app.core.auth import get_current_user
 # переделаю когда будет аутентификация
-from app.crud.bookings import (
+from app.crud.booking import (
     get_booking,
     get_bookings,
     create_booking,
     update_booking,
 )
 from app.models.users import User
-from app.schemas.booking import BookingRead, BookingCreate, BookingUpdate
+from app.schemas.booking import (
+    BookingRead,
+    BookingCreate,
+    BookingUpdate,
+)
 
 bookings_router = APIRouter()
 
@@ -53,7 +57,6 @@ async def get_booking_list(
       - user_id и show_all игнорируются
       - cafe_id учитывается
     """
-
     if not current_user.is_admin and not current_user.is_manager:
         return await get_bookings(
             db=db,
@@ -89,19 +92,17 @@ async def create_booking_endpoint(
 
     Только для авторизованных пользователей.
     """
-
     if not booking_in.tables_slots:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Необходимо указать хотя бы один слот',
         )
 
-    booking = await create_booking(
+    return await create_booking(
         db=db,
         booking_in=booking_in,
         user_id=current_user.id,
     )
-    return booking
 
 
 @bookings_router.get(
@@ -120,7 +121,6 @@ async def get_booking_by_id(
     - Администраторы и менеджеры: видят все бронирования
     - Обычные пользователи: видят только свои
     """
-
     booking = await get_booking(db=db, booking_id=booking_id)
     if not booking:
         raise HTTPException(
@@ -155,7 +155,6 @@ async def update_booking_endpoint(
     - Администраторы и менеджеры видят все бронирования
     - Обычные пользователи видят только свои
     """
-
     booking = await get_booking(db=db, booking_id=booking_id)
     if not booking:
         raise HTTPException(
@@ -180,7 +179,7 @@ async def update_booking_endpoint(
         )
 
     updated_booking = await update_booking(
-        db=db, booking_id=booking_id, updates=updates
+        db=db, booking_id=booking_id, updates=updates,
     )
     if not updated_booking:
         raise HTTPException(
