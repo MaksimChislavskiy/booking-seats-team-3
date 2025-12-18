@@ -16,10 +16,10 @@ from app.crud.bookings import (
 from app.models.users import User
 from app.schemas.bookings import BookingRead, BookingCreate, BookingUpdate
 
-router = APIRouter()
+bookings_router = APIRouter()
 
 
-@router.get(
+@bookings_router.get(
     '',
     response_model=List[BookingRead],
     status_code=status.HTTP_200_OK,
@@ -74,7 +74,7 @@ async def get_booking_list(
     )
 
 
-@router.post(
+@bookings_router.post(
     '',
     response_model=BookingRead,
     status_code=status.HTTP_201_CREATED,
@@ -104,7 +104,7 @@ async def create_booking_endpoint(
     return booking
 
 
-@router.get(
+@bookings_router.get(
     '/{booking_id}',
     response_model=BookingRead,
     status_code=status.HTTP_200_OK,
@@ -138,7 +138,7 @@ async def get_booking_by_id(
     return booking
 
 
-@router.patch(
+@bookings_router.patch(
     '/{booking_id}',
     response_model=BookingRead,
     status_code=status.HTTP_200_OK,
