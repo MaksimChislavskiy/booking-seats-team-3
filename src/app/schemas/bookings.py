@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.models.enum import BookingStatus
 
@@ -9,22 +9,20 @@ from app.models.enum import BookingStatus
 class BookingBase(BaseModel):
     """Базовая схема бронирования."""
 
-    user_id: int
     cafe_id: int
-    table_id: int
-    slot_id: int
+    table_slot_id: int
     date: date
     note: Optional[str] = None
 
 
 class BookingCreate(BookingBase):
-    """Для создания бронирования (POST)."""
+    """Схема для создания бронирования (POST)."""
 
-    pass  # при создании статус всегда pending
+    pass  # статус всегда pending
 
 
 class BookingUpdate(BaseModel):
-    """Для обновления бронирования (PATCH/PUT)."""
+    """Схема для обновления бронирования (PATCH)."""
 
     status: Optional[BookingStatus] = None
     note: Optional[str] = None
@@ -34,9 +32,7 @@ class BookingRead(BookingBase):
     """Схема бронирования для ответа (GET)."""
 
     id: int
+    user_id: int
     status: BookingStatus
 
-    class Config:
-        """Настройки Pydantic для работы с ORM."""
-
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
