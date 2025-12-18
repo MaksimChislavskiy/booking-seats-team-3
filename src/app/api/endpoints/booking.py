@@ -14,7 +14,7 @@ from app.crud.bookings import (
     update_booking,
 )
 from app.models.users import User
-from app.schemas.bookings import BookingRead, BookingCreate, BookingUpdate
+from app.schemas.booking import BookingRead, BookingCreate, BookingUpdate
 
 bookings_router = APIRouter()
 
