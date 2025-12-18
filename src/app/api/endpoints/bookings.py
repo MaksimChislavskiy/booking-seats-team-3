@@ -1,34 +1,41 @@
+from datetime import date
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
-from app.core.security import get_current_user
-from app.crud.bookings import get_bookings
+from app.core.auth import get_current_user
+# переделаю когда будет аутентификация
+from app.crud.bookings import (
+    get_booking,
+    get_bookings,
+    create_booking,
+    update_booking,
+)
 from app.models.users import User
-from app.schemas.bookings import BookingRead
+from app.schemas.bookings import BookingRead, BookingCreate, BookingUpdate
 
 router = APIRouter()
 
 
 @router.get(
-    "",
+    '',
     response_model=List[BookingRead],
     status_code=status.HTTP_200_OK,
 )
 async def get_booking_list(
     show_all: bool = Query(
         default=False,
-        description="Показывать все бронирования",
+        description='Показывать все бронирования',
     ),
     cafe_id: Optional[int] = Query(
         default=None,
-        description="ID кафе",
+        description='ID кафе',
     ),
     user_id: Optional[int] = Query(
         default=None,
-        description="ID пользователя",
+        description='ID пользователя',
     ),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
@@ -65,3 +72,120 @@ async def get_booking_list(
         db=db,
         cafe_id=cafe_id,
     )
+
+
+@router.post(
+    '',
+    response_model=BookingRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_booking_endpoint(
+    booking_in: BookingCreate,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+) -> BookingRead:
+    """
+    Создание нового бронирования.
+
+    Только для авторизованных пользователей.
+    """
+
+    if not booking_in.tables_slots:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Необходимо указать хотя бы один слот',
+        )
+
+    booking = await create_booking(
+        db=db,
+        booking_in=booking_in,
+        user_id=current_user.id,
+    )
+    return booking
+
+
+@router.get(
+    '/{booking_id}',
+    response_model=BookingRead,
+    status_code=status.HTTP_200_OK,
+)
+async def get_booking_by_id(
+    booking_id: int = Path(..., description='ID бронирования'),
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+) -> BookingRead:
+    """
+    Получение информации о бронировании по ID.
+
+    - Администраторы и менеджеры: видят все бронирования
+    - Обычные пользователи: видят только свои
+    """
+
+    booking = await get_booking(db=db, booking_id=booking_id)
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Бронирование не найдено',
+        )
+
+    if not current_user.is_admin and not current_user.is_manager:
+        if booking.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='Доступ запрещён',
+            )
+
+    return booking
+
+
+@router.patch(
+    '/{booking_id}',
+    response_model=BookingRead,
+    status_code=status.HTTP_200_OK,
+)
+async def update_booking_endpoint(
+    booking_id: int = Path(..., description='ID бронирования'),
+    updates: BookingUpdate = ...,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+) -> BookingRead:
+    """
+    Обновление информации о бронировании по ID.
+
+    - Администраторы и менеджеры видят все бронирования
+    - Обычные пользователи видят только свои
+    """
+
+    booking = await get_booking(db=db, booking_id=booking_id)
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Бронирование не найдено',
+        )
+
+    if not current_user.is_admin and not current_user.is_manager:
+        if booking.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='Доступ запрещён',
+            )
+
+    if (
+        updates.booking_date
+        and updates.booking_date < date.today()
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Нельзя установить дату в прошлом',
+        )
+
+    updated_booking = await update_booking(
+        db=db, booking_id=booking_id, updates=updates
+    )
+    if not updated_booking:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Не удалось обновить бронирование',
+        )
+
+    return updated_booking
