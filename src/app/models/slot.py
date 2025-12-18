@@ -47,7 +47,6 @@ class Slot(Base):
         back_populates='slots',
         lazy='selectin',
     )
-    # TODO: Добавить relationship с Booking после создания модели бронирования
 
     __table_args__ = (
         CheckConstraint(

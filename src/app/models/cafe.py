@@ -18,7 +18,7 @@ from app.core.constants import (
 from app.core.db import Base
 
 if TYPE_CHECKING:
-    from app.models import Booking, Slot, Table, User
+    from app.models import User
 
 
 class Cafe(Base):
@@ -34,9 +34,6 @@ class Cafe(Base):
         description: Описание кафе (опционально).
         photo_id: Идентификатор фотографии кафе (опционально).
         managers: Список менеджеров кафе.
-        tables: Список столов в кафе.
-        slots: Список временных слотов кафе.
-        booking: Список бронирований кафе.
 
     """
 
@@ -67,21 +64,6 @@ class Cafe(Base):
     managers: Mapped[list['User']] = relationship(
         'User',
         secondary='cafe_managers',
-        back_populates='cafe',
-        lazy='selectin',
-    )
-    tables: Mapped[list['Table']] = relationship(
-        'Table',
-        back_populates='cafe',
-        lazy='selectin',
-    )
-    slots: Mapped[list['Slot']] = relationship(
-        'Slot',
-        back_populates='cafe',
-        lazy='selectin',
-    )
-    bookings: Mapped[list['Booking']] = relationship(
-        'Booking',
         back_populates='cafe',
         lazy='selectin',
     )
