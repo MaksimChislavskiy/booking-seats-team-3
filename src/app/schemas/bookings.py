@@ -99,6 +99,7 @@ class BookingCreate(BaseModel):
 
 class BookingUpdate(BaseModel):
     """Схема для обновления бронирования (PATCH)."""
+
     cafe_id: Optional[int] = None
     tables_slots: Optional[List[TableSlotCreate]] = None
     guest_number: Optional[int] = None
