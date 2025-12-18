@@ -1,11 +1,16 @@
+
 import logging
 from logging.handlers import RotatingFileHandler
 
 from rich.logging import RichHandler
 
 from app.core.config import settings
-from app.core.constants import (LOG_BACKUP_COUNT, LOG_FILE, LOG_MAX_BYTES,
-                                LOGS_DIR)
+from app.core.constants import (
+    LOGS_DIR,
+    LOG_BACKUP_COUNT,
+    LOG_FILE,
+    LOG_MAX_BYTES,
+)
 
 LOGS_DIR.mkdir(exist_ok=True)
 

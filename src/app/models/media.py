@@ -4,8 +4,10 @@ from sqlalchemy import Integer, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.constants import (MAX_LENGTH_MEDIA_FILEPATH,
-                                MEDIA_PATH_DISPLAY_LENGTH)
+from app.core.constants import (
+    MAX_LENGTH_MEDIA_FILEPATH,
+    MEDIA_PATH_DISPLAY_LENGTH,
+)
 from app.core.db import Base
 
 
