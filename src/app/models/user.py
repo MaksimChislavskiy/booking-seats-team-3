@@ -84,7 +84,6 @@ class User(Base):
         back_populates='managers',
         lazy='selectin',
     )
-    # TODO: Добавить нужные relationship в будущем
 
     __table_args__ = (
         CheckConstraint(
