@@ -7,10 +7,9 @@ from app.core.constants import (
     DEFAULT_LOCAL_HOST,
     ENV_RUN_IN_DOCKER,
     INFRA_DIR,
-    TRUE_VALUE,
 )
 
-IS_RUN_IN_DOCKER = os.getenv(ENV_RUN_IN_DOCKER, 'no').lower() == TRUE_VALUE
+IS_RUN_IN_DOCKER = ENV_RUN_IN_DOCKER in os.environ
 
 
 class Settings(BaseSettings):
