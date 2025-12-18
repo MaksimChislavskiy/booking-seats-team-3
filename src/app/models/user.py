@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, String
+from sqlalchemy import CheckConstraint, ForeignKey, String
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -64,10 +64,6 @@ class User(Base):
         unique=True,
         nullable=True,
     )
-    password_hash: Mapped[str] = mapped_column(
-        String(MAX_LENGTH_USER_PASSWORD_HASH),
-        nullable=False,
-    )
     role: Mapped[UserRole] = mapped_column(
         SQLEnum(
             UserRole,
@@ -75,9 +71,16 @@ class User(Base):
         ),
         nullable=False,
     )
+    password_hash: Mapped[str] = mapped_column(
+        String(MAX_LENGTH_USER_PASSWORD_HASH),
+        nullable=False,
+    )
+    cafe_id: Mapped[int | None] = mapped_column(
+        ForeignKey('cafe.id', ondelete='RESTRICT'),
+        nullable=True,
+    )
     cafe: Mapped['Cafe'] = relationship(
         'Cafe',
-        secondary='cafe_managers',
         back_populates='managers',
         lazy='selectin',
     )
