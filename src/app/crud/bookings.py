@@ -80,7 +80,6 @@ async def create_booking(
     return booking
 
 
-
 async def update_booking(
     db: AsyncSession,
     booking_id: int,
