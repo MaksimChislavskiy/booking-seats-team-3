@@ -3,10 +3,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import MAX_SEATS_NUMBER, MIN_SEATS_NUMBER
 from app.core.db import Base
-from app.models import AuditMixin, Cafe
+from app.models import Cafe
 
 
-class Table(Base, AuditMixin):
+class Table(Base):
     """Информация о столах для бронирования."""
 
     seat_number: Mapped[int] = mapped_column(

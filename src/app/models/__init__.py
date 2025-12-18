@@ -1,12 +1,12 @@
-from .base import AuditMixin
 from .booking import Booking
 from .cafe import Cafe
+from .media import Media
 from .slot import Slot
 from .table import Table
 from .user import User
 
 __all__ = [
-    'AuditMixin',
+    'Media',
     'Booking',
     'Cafe',
     'Slot',

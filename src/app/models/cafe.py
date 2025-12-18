@@ -1,10 +1,12 @@
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import (
-    # ForeignKey,
+    ForeignKey,
     String,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import (
@@ -12,16 +14,14 @@ from app.core.constants import (
     MAX_LENGTH_CAFE_DESCRIPTION,
     MAX_LENGTH_CAFE_NAME,
     MAX_LENGTH_CAFE_PHONE,
-    # MAX_LENGTH_UUID,
 )
 from app.core.db import Base
-from app.models import AuditMixin
 
 if TYPE_CHECKING:
     from app.models import Booking, Slot, Table, User
 
 
-class Cafe(Base, AuditMixin):
+class Cafe(Base):
     """Модель кафе.
 
     Представляет кафе в системе бронирования мест. Содержит информацию
@@ -59,12 +59,11 @@ class Cafe(Base, AuditMixin):
         String(MAX_LENGTH_CAFE_DESCRIPTION),
         nullable=True,
     )
-    # FIXME: Раскоментировать, когда модель media будет добавлена + миграцию
-    # photo_id: Mapped[str | None] = mapped_column(
-    #     String(MAX_LENGTH_UUID),
-    #     ForeignKey('media.id', ondelete='RESTRICT'),
-    #     nullable=True,
-    # )
+    photo_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey('media.id', ondelete='RESTRICT'),
+        nullable=True,
+    )
     managers: Mapped[list['User']] = relationship(
         'User',
         secondary='cafe_managers',

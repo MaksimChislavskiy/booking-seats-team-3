@@ -16,7 +16,6 @@ from app.core.constants import (
     ROLE_USER,
 )
 from app.core.db import Base
-from app.models import AuditMixin
 
 if TYPE_CHECKING:
     from app.models import Cafe
@@ -33,7 +32,7 @@ class UserRole(StrEnum):
     USER = ROLE_USER
 
 
-class User(Base, AuditMixin):
+class User(Base):
     """Модель пользователя.
 
     Представляет учетную запись пользователя и содержит основные
