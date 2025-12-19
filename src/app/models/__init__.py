@@ -3,7 +3,7 @@ from .cafe import Cafe
 from .media import Media
 from .slot import Slot
 from .table import Table
-from .user import User
+from .user import User, UserRole
 
 __all__ = [
     'Media',
@@ -12,4 +12,5 @@ __all__ = [
     'Slot',
     'Table',
     'User',
+    'UserRole',
 ]
