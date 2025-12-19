@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import AsyncGenerator
 
 from sqlalchemy import Boolean, DateTime, func, text
@@ -17,6 +17,7 @@ from sqlalchemy.orm import (
 )
 
 from app.core.config import settings
+from app.utils import utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -43,13 +44,13 @@ class Base(DeclarativeBase):
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=utc_now,
         server_default=func.now(),
         nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=utc_now,
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False,

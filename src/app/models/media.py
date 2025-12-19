@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 
-from sqlalchemy import Integer, String, text
+from sqlalchemy import Integer, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -26,11 +26,6 @@ class Media(Base):
         PG_UUID(as_uuid=True),
         primary_key=True,
         default=uuid4,
-    )
-    active: Mapped[bool | None] = mapped_column(
-        nullable=True,
-        default=None,
-        server_default=text('null'),
     )
     file_path: Mapped[str] = mapped_column(
         String(MAX_LENGTH_MEDIA_FILEPATH),
