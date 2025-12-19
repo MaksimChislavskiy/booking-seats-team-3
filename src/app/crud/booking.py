@@ -1,5 +1,5 @@
 from datetime import date
-from typing import List, Optional, Any, Type
+from typing import Any, List, Optional, Type
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +14,8 @@ from app.schemas.bookings import BookingCreate, BookingUpdate
 class BookingCRUD(BaseCRUD):
     """CRUD для бронирований, с учётом TableSlot и валидаций."""
 
-    def __init__(self, model: Type[Booking] = Booking):
+    def __init__(self, model: Type[Booking] = Booking) -> None:
+        """Инициализация CRUD для бронирований."""
         super().__init__(model)
 
     async def get_bookings(
