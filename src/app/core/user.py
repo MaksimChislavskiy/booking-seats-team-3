@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.constants import MIN_LENGTH_USER_PASSWORD
 from app.core.db import get_async_session
+from app.core.security import check_password_rules
 from app.models import User, UserRole
 
 
@@ -34,7 +35,8 @@ bearer_transport = BearerTransport(tokenUrl='auth/login')
 def get_jwt_strategy() -> JWTStrategy:
     """Создает и возвращает объект JWTStrategy.
 
-    С настроенными параметрами секретного ключа и временем жизни токена.
+    Используется для генерации и валидации access JWT-токенов,
+    передаваемых через Bearer Authorization header.
     """
     return JWTStrategy(
         secret=settings.secret,
@@ -57,19 +59,10 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         password: str,
         user: User | None = None,
     ) -> None:
-        """Кастомная валидация пароля."""
-        if len(password) < MIN_LENGTH_USER_PASSWORD:
-            raise InvalidPasswordException(
-                reason=(
-                    f"Пароль должен быть не менее "
-                    f"{MIN_LENGTH_USER_PASSWORD} символов"
-                ),
-            )
-
-        if user and user.email and user.email in password:
-            raise InvalidPasswordException(
-                reason="Пароль не должен содержать email пользователя",
-            )
+        """Валидирует пароль на соответствие установленным правилам."""
+        reason = check_password_rules(password, getattr(user, 'email', None))
+        if reason:
+            raise InvalidPasswordException(reason=reason)
 
 
 async def get_user_manager(
@@ -94,7 +87,7 @@ def current_admin(
     if user.role != UserRole.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Недостаточно прав доступа",
+            detail='Недостаточно прав доступа',
         )
     return user
 
@@ -106,6 +99,6 @@ def current_manager_or_admin(
     if user.role not in {UserRole.ADMIN, UserRole.MANAGER}:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Недостаточно прав доступа",
+            detail='Недостаточно прав доступа',
         )
     return user

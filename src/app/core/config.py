@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     first_superuser_password: str | None = None
     log_level: str = 'INFO'
 
-    secret: str = 'SECRET'
-    access_token_expire_seconds: int = 3600
+    secret: str
+    access_token_expire_seconds: int
 
     postgres_user: str
     postgres_password: str
