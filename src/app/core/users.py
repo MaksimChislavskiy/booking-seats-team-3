@@ -1,9 +1,12 @@
-# app/core/users.py
+from typing import AsyncGenerator
 
-from typing import AsyncGenerator, Optional
-
-from fastapi import Depends, HTTPException, Request, status
-from fastapi_users import BaseUserManager, FastAPIUsers, IntegerIDMixin
+from fastapi import Depends, HTTPException, status
+from fastapi_users import (
+    BaseUserManager,
+    FastAPIUsers,
+    IntegerIDMixin,
+    InvalidPasswordException,
+)
 from fastapi_users.authentication import (
     AuthenticationBackend,
     BearerTransport,
@@ -13,22 +16,26 @@ from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.constants import MIN_LENGTH_USER_PASSWORD
 from app.core.db import get_async_session
-from app.models.users import User, UserRole
+from app.models import User, UserRole
 
 
 async def get_user_db(
     session: AsyncSession = Depends(get_async_session),
 ) -> AsyncGenerator[SQLAlchemyUserDatabase[User, int], None]:
-    """Возвращает объект базы данных пользователей для fastapi-users."""
+    """Создает объект для работы с БД пользователя по сессии."""
     yield SQLAlchemyUserDatabase(session, User)
 
 
-bearer_transport = BearerTransport(tokenUrl="auth/login")
+bearer_transport = BearerTransport(tokenUrl='auth/login')
 
 
 def get_jwt_strategy() -> JWTStrategy:
-    """Возвращает стратегию JWT-аутентификации."""
+    """Создает и возвращает объект JWTStrategy.
+
+    С настроенными параметрами секретного ключа и временем жизни токена.
+    """
     return JWTStrategy(
         secret=settings.secret,
         lifetime_seconds=settings.access_token_expire_seconds,
@@ -36,7 +43,7 @@ def get_jwt_strategy() -> JWTStrategy:
 
 
 auth_backend = AuthenticationBackend(
-    name="jwt",
+    name='jwt',
     transport=bearer_transport,
     get_strategy=get_jwt_strategy,
 )
@@ -45,14 +52,24 @@ auth_backend = AuthenticationBackend(
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     """Менеджер пользователей для fastapi-users."""
 
-    async def on_after_register(
+    async def validate_password(
         self,
-        user: User,
-        request: Optional[Request] = None,
+        password: str,
+        user: User | None = None,
     ) -> None:
-        """Хук после успешной регистрации пользователя."""
-        # оставлен для возможного расширения
-        pass
+        """Кастомная валидация пароля."""
+        if len(password) < MIN_LENGTH_USER_PASSWORD:
+            raise InvalidPasswordException(
+                reason=(
+                    f"Пароль должен быть не менее "
+                    f"{MIN_LENGTH_USER_PASSWORD} символов"
+                ),
+            )
+
+        if user and user.email and user.email in password:
+            raise InvalidPasswordException(
+                reason="Пароль не должен содержать email пользователя",
+            )
 
 
 async def get_user_manager(

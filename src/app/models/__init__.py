@@ -3,7 +3,7 @@ from .booking import Booking
 from .cafe import Cafe
 from .slot import Slot
 from .table import Table
-from .user import User
+from .user import User, UserRole
 
 __all__ = [
     'AuditMixin',
@@ -12,4 +12,5 @@ __all__ = [
     'Slot',
     'Table',
     'User',
+    'UserRole',
 ]
