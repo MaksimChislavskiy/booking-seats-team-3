@@ -8,7 +8,6 @@ ORIGINS = getenv('CORS_ORIGINS', '').split(',')
 # --- Docker ---
 DEFAULT_LOCAL_HOST = 'localhost'
 ENV_RUN_IN_DOCKER = 'RUN_IN_DOCKER'
-TRUE_VALUE = 'yes'
 
 # --- Логирование ---
 LOGS_DIR = Path('logs')
@@ -35,7 +34,6 @@ MAX_LENGTH_CAFE_NAME = 255
 MAX_LENGTH_CAFE_ADDRESS = 500
 MAX_LENGTH_CAFE_PHONE = 50
 MAX_LENGTH_CAFE_DESCRIPTION = 2000
-MAX_LENGTH_UUID = 36
 
 # --- Table ---
 MIN_SEATS_NUMBER = 1
