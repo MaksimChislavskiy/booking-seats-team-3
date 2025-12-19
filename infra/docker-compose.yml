@@ -40,9 +40,9 @@ services:
       - db
     restart: unless-stopped
   gateway:
-    build:
-      context: ../infra/nginx
-      dockerfile: Dockerfile
+    image: nginx:1.25-alpine
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/templates/default.conf.template:ro
     env_file:
       - .env
     ports:
