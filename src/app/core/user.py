@@ -16,7 +16,6 @@ from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.constants import MIN_LENGTH_USER_PASSWORD
 from app.core.db import get_async_session
 from app.core.security import check_password_rules
 from app.models import User, UserRole
