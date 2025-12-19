@@ -5,6 +5,7 @@ from sqlalchemy import (
     Date,
     Enum,
     ForeignKey,
+    Integer,
     Text,
     UniqueConstraint,
     text,
@@ -20,17 +21,20 @@ class TableSlot(Base):
     """Связка стола и временного слота."""
 
     table_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey('table.id', ondelete='RESTRICT'),
         nullable=False,
     )
 
     slot_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey('slot.id', ondelete='RESTRICT'),
         nullable=False,
     )
 
     booking_id: Mapped[int | None] = mapped_column(
-        ForeignKey('booking.id', ondelete='SET NULL'),
+        Integer,
+        ForeignKey('booking.id', ondelete='RESTRICT'),
         nullable=True,
     )
 
@@ -43,6 +47,7 @@ class TableSlot(Base):
         UniqueConstraint(
             'table_id',
             'slot_id',
+            'booking_id',
             name='uq_table_slot',
         ),
     )
@@ -55,14 +60,18 @@ class Booking(Base, AuditMixin):
     """Бронирование столов в ресторане."""
 
     user_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey('user.id', ondelete='RESTRICT'),
         nullable=False,
     )
 
     cafe_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey('cafe.id', ondelete='RESTRICT'),
         nullable=False,
     )
+
+    guest_number: Mapped[int] = mapped_column(Integer, nullable=False)
 
     table_slot_id: Mapped[int] = mapped_column(
         ForeignKey('tableslot.id', ondelete='RESTRICT'),
@@ -85,16 +94,17 @@ class Booking(Base, AuditMixin):
         nullable=True,
     )
 
+    tables_slots: Mapped[list['TableSlot']] = relationship(
+        'TableSlot',
+        back_populates='booking',
+        cascade='all, delete-orphan',
+    )
+
     __table_args__ = (
         CheckConstraint(
-            "date >= CURRENT_DATE",
-            name="ck_booking_date_not_past",
-        ),
-        UniqueConstraint(
-            'table_slot_id',
-            'date',
-            name='uq_booking_table_slot_date',
-        ),
+            'date >= CURRENT_DATE',
+            name='ck_booking_date_not_past',
+        )
     )
 
     def __repr__(self) -> str:
@@ -102,7 +112,7 @@ class Booking(Base, AuditMixin):
             f'Booking id={self.id} '
             f'user_id={self.user_id} '
             f'cafe_id={self.cafe_id} '
-            f'table_slot_id={self.table_slot_id} '
+            f'tables_slots={len(self.tables_slots)} '
             f'date={self.date} '
             f'status={self.status}'
         )
