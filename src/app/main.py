@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routers import main_router
 from app.core.config import settings
-from app.core.constants import ORIGINS
 from app.core.logging import setup_logging
 
 logger = setup_logging()
@@ -30,8 +29,8 @@ app.include_router(main_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ORIGINS,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allow_methods=['OPTIONS', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allow_headers=['Authorization', 'Content-Type'],
 )

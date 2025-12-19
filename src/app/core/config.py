@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     first_superuser_email: EmailStr | None = None
     first_superuser_password: str | None = None
     log_level: str = 'INFO'
+    cors_origins: list[str] = []
 
     postgres_user: str
     postgres_password: str
