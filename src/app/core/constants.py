@@ -1,7 +1,9 @@
+from os import getenv
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[3]
 INFRA_DIR = BASE_DIR / 'infra'
+ORIGINS = getenv('CORS_ORIGINS', '').split(',')
 
 # --- Docker ---
 DEFAULT_LOCAL_HOST = 'localhost'
