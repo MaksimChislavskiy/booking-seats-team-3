@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routers import main_router
 from app.core.config import settings
@@ -25,3 +26,11 @@ app = FastAPI(
 )
 
 app.include_router(main_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=['OPTIONS', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allow_headers=['Authorization', 'Content-Type'],
+)
