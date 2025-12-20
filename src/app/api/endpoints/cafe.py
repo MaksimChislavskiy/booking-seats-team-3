@@ -1,82 +1,98 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.cafe import (
+from src.app.core.db import get_async_session
+from src.app.crud.cafe import (
     create_cafe,
     delete_cafe,
     get_cafe_by_id,
     get_cafes_list,
     update_cafe,
 )
-from app.schemas.cafe import CafeCreate, CafeRead, CafeUpdate
+from src.app.schemas.cafe import CafeCreate, CafeRead, CafeUpdate
 
-from src.app.core.db import get_async_session
-
-router = APIRouter(tags=["Кафе"])
+router = APIRouter()
 
 
-@router.post("/", response_model=CafeRead, status_code=status.HTTP_201_CREATED)
-async def create_cafe_endpoint(
-    cafe_in: CafeCreate,
-    db: AsyncSession = Depends(get_async_session),
-) -> CafeRead:
-    """Создание нового кафе."""
-    return await create_cafe(db, cafe_in)
-
-
-@router.get("/", response_model=List[CafeRead])
-async def get_cafes_endpoint(
-    skip: int = 0,
-    limit: int = 100,
-    db: AsyncSession = Depends(get_async_session),
-) -> List[CafeRead]:
-    """Список всех кафе с пагинацией."""
-    return await get_cafes_list(db, skip=skip, limit=limit)
-
-
-@router.get("/{cafe_id}", response_model=CafeRead)
-async def get_cafe_endpoint(
+async def get_cafe_or_404(
     cafe_id: int,
     db: AsyncSession = Depends(get_async_session),
 ) -> CafeRead:
-    """Получение кафе по ID."""
+    """Получает кафе по ID или вызывает 404."""
     cafe = await get_cafe_by_id(db, cafe_id)
     if not cafe:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Кафе не найдено",
+            detail='Кафе не найдено',
         )
     return cafe
 
 
-@router.patch("/{cafe_id}", response_model=CafeRead)
-async def update_cafe_endpoint(
-    cafe_id: int,
-    cafe_in: CafeUpdate,
+@router.post(
+    '/',
+    response_model=CafeRead,
+    status_code=status.HTTP_201_CREATED,
+    summary='Создание нового кафе',
+    description='Создаёт новое кафе с указанными параметрами.',
+)
+async def create(
+    cafe_in: CafeCreate,
     db: AsyncSession = Depends(get_async_session),
 ) -> CafeRead:
-    """Обновление кафе."""
-    cafe = await get_cafe_by_id(db, cafe_id)
-    if not cafe:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Кафе не найдено",
-        )
-    return await update_cafe(db, cafe, cafe_in)
+    """Создаёт новое кафе."""
+    return await create_cafe(db, cafe_in)
 
 
-@router.delete("/{cafe_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_cafe_endpoint(
-    cafe_id: int,
+@router.get(
+    '/',
+    response_model=list[CafeRead],
+    summary='Список кафе',
+    description='Возвращает список всех кафе с пагинацией.',
+)
+async def read_list(
+    skip: int = 0,
+    limit: int = 100,
     db: AsyncSession = Depends(get_async_session),
+) -> list[CafeRead]:
+    """Возвращает список всех кафе."""
+    return await get_cafes_list(db, skip=skip, limit=limit)
+
+
+@router.get(
+    '/{cafe_id}',
+    response_model=CafeRead,
+    summary='Получение кафе по ID',
+    description='Возвращает информацию о конкретном кафе.',
+)
+async def read(
+    cafe: CafeRead = Depends(get_cafe_or_404),
+) -> CafeRead:
+    """Возвращает информацию о кафе."""
+    return cafe
+
+
+@router.patch(
+    '/{cafe_id}',
+    response_model=CafeRead,
+    summary='Обновление кафе',
+    description='Частичное обновление данных кафе.',
+)
+async def update(
+    cafe_in: CafeUpdate,
+    cafe: CafeRead = Depends(get_cafe_or_404),
+) -> CafeRead:
+    """Обновляет данные кафе."""
+    return await update_cafe(db=cafe.session, cafe=cafe, cafe_in=cafe_in)
+
+
+@router.delete(
+    '/{cafe_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary='Удаление кафе',
+    description='Удаляет кафе и связанные данные (cascade).',
+)
+async def delete(
+    cafe: CafeRead = Depends(get_cafe_or_404),
 ) -> None:
-    """Удаление кафе."""
-    cafe = await get_cafe_by_id(db, cafe_id)
-    if not cafe:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Кафе не найдено",
-        )
-    await delete_cafe(db, cafe)
+    """Удаляет кафе."""
+    await delete_cafe(db=cafe.session, cafe=cafe)

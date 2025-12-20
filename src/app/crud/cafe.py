@@ -3,9 +3,8 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.cafe import CafeCreate, CafeUpdate
-
-from src.app.models.cafes import Cafe
+from src.app.models.cafe import Cafe
+from src.app.schemas.cafe import CafeCreate, CafeUpdate
 
 
 async def create_cafe(db: AsyncSession, cafe_in: CafeCreate) -> Cafe:
@@ -19,9 +18,7 @@ async def create_cafe(db: AsyncSession, cafe_in: CafeCreate) -> Cafe:
 
 async def get_cafe_by_id(db: AsyncSession, cafe_id: int) -> Optional[Cafe]:
     """Возвращает кафе по ID."""
-    result = await db.execute(
-        select(Cafe).where(Cafe.id == cafe_id),
-    )
+    result = await db.execute(select(Cafe).where(Cafe.id == cafe_id))
     return result.scalar_one_or_none()
 
 
@@ -31,9 +28,7 @@ async def get_cafes_list(
     limit: int = 100,
 ) -> List[Cafe]:
     """Возвращает список кафе с пагинацией."""
-    result = await db.execute(
-        select(Cafe).offset(skip).limit(limit),
-    )
+    result = await db.execute(select(Cafe).offset(skip).limit(limit))
     return result.scalars().all()
 
 
@@ -52,6 +47,6 @@ async def update_cafe(
 
 
 async def delete_cafe(db: AsyncSession, cafe: Cafe) -> None:
-    """Удаляет кафе (можно заменить на soft-delete)."""
+    """Удаляет кафе (cascade работает через модель)."""
     await db.delete(cafe)
     await db.commit()
