@@ -1,10 +1,7 @@
 from datetime import date, datetime
-from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from src.app.schemas.cafe import CafeRead
-from src.app.schemas.slot import SlotRead
 from src.app.schemas.table import TableRead
 from src.app.schemas.user import UserRead
 
@@ -12,11 +9,11 @@ from src.app.schemas.user import UserRead
 class BookingBase(BaseModel):
     """Общие поля для всех схем Booking."""
 
-    date: date = Field(
+    booking_date: date = Field(
         ...,
         description='Дата бронирования',
     )
-    note: Optional[str] = Field(
+    note: str | None = Field(
         None,
         description='Примечание к бронированию',
     )
@@ -25,53 +22,49 @@ class BookingBase(BaseModel):
 class BookingCreate(BookingBase):
     """Схема для создания бронирования."""
 
+    model_config = ConfigDict(extra='forbid')
+
     table_id: int = Field(
         ...,
         description='ID стола',
     )
-    slot_id: int = Field(
-        ...,
-        description='ID временного слота',
-    )
 
-    @field_validator('date')
+    @field_validator('booking_date')
     @classmethod
-    def date_not_past(cls, value: date) -> date:
-        """Дата бронирования не может быть в прошлом."""
+    def booking_date_not_past(cls, value: date) -> date:
+        """Проверяет, что дата бронирования не в прошлом."""
         if value < date.today():
             raise ValueError('Нельзя бронировать на прошедшую дату')
         return value
 
 
-class BookingUpdate(BookingBase):
+class BookingUpdate(BaseModel):
     """Схема для частичного обновления бронирования."""
 
-    table_id: Optional[int] = Field(None, description='ID стола')
-    slot_id: Optional[int] = Field(None, description='ID временного слота')
+    model_config = ConfigDict(extra='forbid')
 
-    @field_validator('date')
+    booking_date: date | None = Field(None, description='Дата бронирования')
+    note: str | None = Field(None, description='Примечание к бронированию')
+    table_id: int | None = Field(None, description='ID стола')
+
+    @field_validator('booking_date')
     @classmethod
-    def date_not_past(cls, value: Optional[date]) -> Optional[date]:
-        """Дата не может быть в прошлом (если передано)."""
+    def booking_date_not_past(cls, value: date | None) -> date | None:
+        """Проверяет, что дата бронирования не в прошлом (если передано)."""
         if value is not None and value < date.today():
             raise ValueError('Нельзя изменить дату на прошедшую')
         return value
 
 
-class BookingRead(BookingBase):
-    """Схема для чтения бронирования."""
+class BookingInfo(BookingBase):
+    """Схема для чтения информации о бронировании."""
 
     id: int
     user: UserRead
-    cafe: CafeRead
     table: TableRead
-    slot: SlotRead
     status: str = Field(..., description='Статус бронирования')
     created_at: datetime
     updated_at: datetime
-    active: bool
+    is_active: bool
 
-    class Config:
-        """Конфигурация Pydantic."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
