@@ -1,16 +1,14 @@
-from datetime import date
-from typing import Any, List, Optional, Type
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.crud.base import BaseCRUD
+from app.crud.base import CRUDBase
 from app.models import Booking, BookingStatus, TableSlot
-from app.schemas.booking import BookingCreate, BookingUpdate
+from app.schemas.booking import BookingCreate, BookingUpdate, TableSlotCreate
 
 
-class BookingCRUD(BaseCRUD[Booking, BookingCreate, BookingUpdate]):
+class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
     """CRUD для бронирований, с учётом TableSlot и валидаций."""
 
     async def get_bookings(
@@ -18,19 +16,15 @@ class BookingCRUD(BaseCRUD[Booking, BookingCreate, BookingUpdate]):
         session: AsyncSession,
         skip: int = 0,
         limit: int = 100,
-        user_id: Optional[int] = None,
-        cafe_id: Optional[int] = None,
-        date_filter: Optional[date] = None,
-    ) -> List[Booking]:
+        user_id: int | None = None,
+        cafe_id: int | None = None,
+    ) -> list[Booking]:
         """Получить список бронирований с фильтрацией."""
         query = select(self.model)
         if user_id is not None:
             query = query.where(self.model.user_id == user_id)
         if cafe_id is not None:
             query = query.where(self.model.cafe_id == cafe_id)
-        if date_filter is not None:
-            query = query.where(self.model.date == date_filter)
-
         result = await session.execute(query.offset(skip).limit(limit))
         return result.scalars().all()
 
@@ -40,14 +34,7 @@ class BookingCRUD(BaseCRUD[Booking, BookingCreate, BookingUpdate]):
         booking_in: BookingCreate,
         user_id: int,
     ) -> Booking:
-        """Создать бронирование с проверкой даты и слотов."""
-
-        if booking_in.booking_date < date.today():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Нельзя создать бронирование на прошедшую дату',
-            )
-
+        """Создать бронирование и привязать к нему свободные слоты."""
         booking = self.model(
             user_id=user_id,
             cafe_id=booking_in.cafe_id,
@@ -60,7 +47,23 @@ class BookingCRUD(BaseCRUD[Booking, BookingCreate, BookingUpdate]):
         session.add(booking)
         await session.flush()
 
-        for ts in booking_in.tables_slots:
+        await self._attach_table_slots(
+            session=session,
+            booking_id=booking.id,
+            tables_slots=booking_in.tables_slots,
+        )
+        await session.commit()
+        await session.refresh(booking)
+        return booking
+
+    async def _attach_table_slots(
+        self,
+        session: AsyncSession,
+        booking_id: int,
+        tables_slots: list[TableSlotCreate],
+    ) -> None:
+        """Привязать свободные столы и слоты к бронированию."""
+        for ts in tables_slots:
             stmt = select(TableSlot).where(
                 TableSlot.table_id == ts.table_id,
                 TableSlot.slot_id == ts.slot_id,
@@ -75,42 +78,38 @@ class BookingCRUD(BaseCRUD[Booking, BookingCreate, BookingUpdate]):
                     detail='Указанный стол или слот недоступен',
                 )
 
-            table_slot.booking_id = booking.id
-
-        await session.commit()
-        await session.refresh(booking)
-        return booking
+            table_slot.booking_id = booking_id
 
     async def update_booking(
         self,
         session: AsyncSession,
         booking_id: int,
         updates: BookingUpdate,
-    ) -> Optional[Booking]:
+    ) -> Booking | None:
         """Обновить бронирование по ID."""
         booking = await self.get_by_id(booking_id, session)
         if not booking:
             return None
 
-        data: dict[str, Any] = {}
-        if updates.status is not None:
-            data['status'] = updates.status
-        if updates.note is not None:
-            data['note'] = updates.note
+        booking = await self.update(
+            booking,
+            updates,
+            session=session,
+        )
+        return await self.update(
+            booking,
+            updates,
+            session=session,
+        )
 
-        if data:
-            booking = await self.update(booking, data, session)
-        return booking
-
-    async def delete_booking(
+    async def deactivate_booking(
         self,
         session: AsyncSession,
         booking_id: int,
         user_id: int,
         is_admin: bool,
     ) -> Booking:
-        """Деактивировать бронирование """
-
+        """Деактивировать бронирование."""
         booking = await session.get(Booking, booking_id)
 
         if not booking or not booking.active:
@@ -125,11 +124,9 @@ class BookingCRUD(BaseCRUD[Booking, BookingCreate, BookingUpdate]):
                 detail='Недостаточно прав для удаления бронирования',
             )
 
-        booking.active = False
-
-        await session.commit()
+        await self.soft_delete(booking, session)
         await session.refresh(booking)
         return booking
 
 
-booking_crud = BookingCRUD()
+booking_crud = CRUDBooking()
