@@ -1,1 +1,27 @@
+<<<<<<< HEAD
 
+=======
+from uuid import UUID
+
+from fastapi import UploadFile
+from pydantic import BaseModel, Field
+
+
+class MediaData(BaseModel):
+    """Данные для загрузки медиафайла."""
+
+    file: UploadFile = Field(
+        ...,
+        title='Загружаемый файл',
+    )
+
+
+class MediaInfo(BaseModel):
+    """Информация о загруженном медиафайле."""
+
+    media_id: UUID = Field(
+        ...,
+        title='Идентификатор медиа',
+        description='UUID загруженного медиафайла.',
+    )
+>>>>>>> edc506bdfe2c0565750e786f7497d35e8f8bb7f6

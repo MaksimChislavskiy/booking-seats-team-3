@@ -1,7 +1,8 @@
+import re
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.app.core.constants import (
     CAFE_ADDRESS_MAX_LENGTH,
@@ -39,10 +40,12 @@ class CafeBase(BaseModel):
 class CafeCreate(CafeBase):
     """Схема для создания нового кафе."""
 
+    model_config = ConfigDict(extra='forbid')
+
     @field_validator('name')
     @classmethod
     def name_not_empty(cls, value: str) -> str:
-        """Название не может быть пустым."""
+        """Проверка названия кафе на пустоту."""
         if not value.strip():
             raise ValueError('Название кафе не может быть пустым')
         return value.strip()
@@ -50,38 +53,19 @@ class CafeCreate(CafeBase):
     @field_validator('phone')
     @classmethod
     def validate_phone(cls, value: str) -> str:
-        """Проверка формата телефона."""
-        value_clean = (
-            value.replace(' ', '')
-            .replace('-', '')
-            .replace('(', '')
-            .replace(')', '')
-        )
-        if not value_clean.isdigit():
-            raise ValueError('Телефон должен содержать только цифры')
-        if len(value_clean) not in (10, 11):
-            raise ValueError('Телефон должен содержать 10 или 11 цифр')
-        if value_clean.startswith('8'):
-            value_clean = '7' + value_clean[1:]
-        elif not value_clean.startswith('7'):
-            raise ValueError('Телефон должен начинаться с 7 или 8')
-        return value_clean
-
-    @field_validator('photo_id')
-    @classmethod
-    def validate_photo_id(cls, value: UUID | None) -> UUID | None:
-        """photo_id должен быть корректным UUID."""
-        if value is None:
-            return value
-        try:
-            UUID(str(value))
-        except ValueError:
-            raise ValueError('photo_id должен быть корректным UUID')
-        return value
+        """Проверка формата телефона с использованием регулярного выражения."""
+        cleaned = re.sub(r'\D', '', value)
+        if not re.match(r'^7\d{10}$', cleaned):
+            raise ValueError(
+                'Телефон должен быть в формате +7 или 8 с 10 цифрами после',
+            )
+        return cleaned
 
 
 class CafeUpdate(BaseModel):
     """Схема для частичного обновления кафе."""
+
+    model_config = ConfigDict(extra='forbid')
 
     name: str | None = Field(None, max_length=CAFE_NAME_MAX_LENGTH)
     address: str | None = Field(None, max_length=CAFE_ADDRESS_MAX_LENGTH)
@@ -93,7 +77,7 @@ class CafeUpdate(BaseModel):
     @field_validator('name')
     @classmethod
     def name_not_empty(cls, value: str | None) -> str | None:
-        """Название не может быть пустым (если передано)."""
+        """Проверка названия кафе на пустоту (если передано)."""
         if value is not None and not value.strip():
             raise ValueError('Название кафе не может быть пустым')
         return value.strip() if value is not None else value
@@ -104,59 +88,33 @@ class CafeUpdate(BaseModel):
         """Проверка формата телефона (если передано)."""
         if value is None:
             return value
-        value_clean = (
-            value.replace(' ', '')
-            .replace('-', '')
-            .replace('(', '')
-            .replace(')', '')
-        )
-        if not value_clean.isdigit():
-            raise ValueError('Телефон должен содержать только цифры')
-        if len(value_clean) not in (10, 11):
-            raise ValueError('Телефон должен содержать 10 или 11 цифр')
-        if value_clean.startswith('8'):
-            value_clean = '7' + value_clean[1:]
-        elif not value_clean.startswith('7'):
-            raise ValueError('Телефон должен начинаться с 7 или 8')
-        return value_clean
-
-    @field_validator('photo_id')
-    @classmethod
-    def validate_photo_id(cls, value: UUID | None) -> UUID | None:
-        """photo_id должен быть корректным UUID (если передано)."""
-        if value is None:
-            return value
-        try:
-            UUID(str(value))
-        except ValueError:
-            raise ValueError('photo_id должен быть корректным UUID')
-        return value
+        cleaned = re.sub(r'\D', '', value)
+        if not re.match(r'^7\d{10}$', cleaned):
+            raise ValueError(
+                'Телефон должен быть в формате +7 или 8 с 10 цифрами после',
+            )
+        return cleaned
 
 
-class CafeRead(CafeBase):
-    """Схема для чтения/списка кафе."""
+class CafeInfo(CafeBase):
+    """Схема для чтения информации о кафе."""
 
     id: int
     created_at: datetime
     updated_at: datetime
-    active: bool
+    is_active: bool
 
-    class Config:
-        """Конфигурация Pydantic для работы с ORM."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CafeShortInfo(BaseModel):
-    """Укороченная схема для чтения кафе (для списков)."""
+    """Укороченная схема для списков кафе."""
 
     id: int
     name: str
     address: str
     phone: str
+    description: str | None
     photo_id: UUID | None
 
-    class Config:
-        """Конфигурация Pydantic для работы с ORM."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
