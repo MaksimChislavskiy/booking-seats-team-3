@@ -3,44 +3,47 @@ from datetime import date
 from sqlalchemy import (
     CheckConstraint,
     Date,
-    Enum,
     ForeignKey,
     Integer,
-    Text,
+    String,
     UniqueConstraint,
-    text,
 )
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.constants import MAX_LENGTH_BOOKING_NOTE
 from app.core.db import Base
-from app.models.base import AuditMixin
 from app.models.enum import BookingStatus
 
 
-class TableSlot(Base):
-    """Связка стола и временного слота."""
+class TableSlotBooking(Base):
+    """Связующая модель бронирования, стола и временного слота.
+
+    Представляет связь стол-слот для бронирования.
+    Конкретный стол в конкретный временной слот
+    в рамках одного бронирования.
+
+    Модель не существует самостоятельно и всегда принадлежит Booking.
+    """
 
     table_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey('table.id', ondelete='RESTRICT'),
         nullable=False,
     )
-
     slot_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey('slot.id', ondelete='RESTRICT'),
         nullable=False,
     )
-
-    booking_id: Mapped[int | None] = mapped_column(
+    booking_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey('booking.id', ondelete='RESTRICT'),
-        nullable=True,
+        nullable=False,
     )
-
     booking: Mapped['Booking'] = relationship(
-        back_populates='table_slot',
-        uselist=False,
+        'Booking',
+        back_populates='tables_slots',
     )
 
     __table_args__ = (
@@ -48,74 +51,83 @@ class TableSlot(Base):
             'table_id',
             'slot_id',
             'booking_id',
-            name='uq_table_slot',
+            name='uq_table_slot_booking',
         ),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f'<TableSlot id={self.id} '
+            f'table_id={self.table_id} '
+            f'slot_id={self.slot_id}>'
+        )
 
     def __str__(self) -> str:
         return f'Стол {self.table_id} — слот {self.slot_id}'
 
 
-class Booking(Base, AuditMixin):
-    """Бронирование столов в ресторане."""
+class Booking(Base):
+    """Модель бронирования столов в кафе.
+
+    Booking объединяет:
+    - пользователя, который оформил бронирование
+    - кафе, в котором производится бронирование
+    - количество гостей
+    - заметку о бронировании
+    - статус бронирования
+    - дату бронирования
+    - набор занятых столов и слотов (TableSlotBooking).
+    """
 
     user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey('user.id', ondelete='RESTRICT'),
         nullable=False,
     )
-
     cafe_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey('cafe.id', ondelete='RESTRICT'),
         nullable=False,
     )
-
-    guest_number: Mapped[int] = mapped_column(Integer, nullable=False)
-
-    table_slot_id: Mapped[int] = mapped_column(
-        ForeignKey('tableslot.id', ondelete='RESTRICT'),
+    guest_number: Mapped[int] = mapped_column(
+        Integer,
         nullable=False,
     )
-
-    date: Mapped[date] = mapped_column(
+    note: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_BOOKING_NOTE),
+        nullable=True,
+    )
+    status: Mapped[BookingStatus] = mapped_column(
+        SQLEnum(BookingStatus, name='booking_status_enum'),
+        nullable=False,
+        default=BookingStatus.PENDING,
+    )
+    booking_date: Mapped[date] = mapped_column(
         Date,
         nullable=False,
     )
 
-    status: Mapped[BookingStatus] = mapped_column(
-        Enum(BookingStatus, name='booking_status'),
-        nullable=False,
-        server_default=text("'pending'"),
-    )
-
-    note: Mapped[str | None] = mapped_column(
-        Text,
-        nullable=True,
-    )
-
-    tables_slots: Mapped[list['TableSlot']] = relationship(
-        'TableSlot',
+    tables_slots: Mapped[list['TableSlotBooking']] = relationship(
+        'TableSlotBooking',
         back_populates='booking',
-        cascade='all, delete-orphan',
+        lazy='selectin',
     )
 
     __table_args__ = (
         CheckConstraint(
-            'date >= CURRENT_DATE',
-            name='ck_booking_date_not_past',
-        )
+            'booking_date >= CURRENT_DATE',
+            name='check_booking_date_not_past',
+        ),
     )
 
     def __repr__(self) -> str:
         return (
-            f'Booking id={self.id} '
+            f'<Booking id={self.id} '
             f'user_id={self.user_id} '
             f'cafe_id={self.cafe_id} '
-            f'tables_slots={len(self.tables_slots)} '
-            f'date={self.date} '
-            f'status={self.status}'
+            f'date={self.booking_date} '
+            f'status={self.status}>'
         )
 
     def __str__(self) -> str:
-        return f'Бронирование №{self.id} - {self.date}'
+        return f'Бронирование №{self.id} - {self.booking_date}'
