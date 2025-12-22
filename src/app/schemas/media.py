@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-
-=======
 from uuid import UUID
 
 from fastapi import UploadFile
@@ -24,4 +21,3 @@ class MediaInfo(BaseModel):
         title='Идентификатор медиа',
         description='UUID загруженного медиафайла.',
     )
->>>>>>> edc506bdfe2c0565750e786f7497d35e8f8bb7f6
