@@ -85,12 +85,10 @@ async def create_table(
     data: TableCreate,
     session: AsyncSession = Depends(get_async_session),
 ) -> TableInfo:
-    cafe = await check_cafe_exists(cafe_id, session)
+    await check_cafe_exists(cafe_id, session)
 
-    new_table = await table_crud.create_table(
+    new_table = await table_crud.create(
+        obj_in=data,
         session=session,
-        cafe_id=cafe.id,
-        description=data.description,
-        seat_number=data.seat_number
         )
     return new_table

@@ -28,6 +28,8 @@ class TableBase(BaseModel):
 class TableCreate(TableBase):
     """Схема для создания нового стола в системе."""
 
+    cafe_id: int
+
 
 class TableUpdate(BaseModel):
     """Схема для обновления данных существующего стола."""
