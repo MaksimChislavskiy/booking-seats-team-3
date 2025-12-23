@@ -7,8 +7,20 @@ from .table import (
     TableShortInfo,
     TableUpdate,
 )
+from .user import (
+    UserBase,
+    UserCreate,
+    UserInfo,
+    UserShortInfo,
+    UserUpdate,
+)
 
 __all__ = [
+    'UserBase',
+    'UserCreate',
+    'UserUpdate',
+    'UserInfo',
+    'UserShortInfo',
     'CafeShortInfo',
     'MediaData',
     'MediaInfo',
