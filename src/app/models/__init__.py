@@ -1,4 +1,4 @@
-from .booking import Booking
+from .booking import Booking, TableSlotBooking
 from .cafe import Cafe
 from .media import Media
 from .slot import Slot
@@ -13,4 +13,5 @@ __all__ = [
     'Table',
     'User',
     'UserRole',
+    'TableSlotBooking',
 ]

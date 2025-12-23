@@ -6,6 +6,7 @@ INFRA_DIR = BASE_DIR / 'infra'
 # --- Docker ---
 DEFAULT_LOCAL_HOST = 'localhost'
 ENV_RUN_IN_DOCKER = 'RUN_IN_DOCKER'
+TRUE_VALUE = 'yes'
 
 # --- Логирование ---
 LOGS_DIR = Path('logs')
@@ -41,3 +42,6 @@ MAX_SEATS_NUMBER = 24
 # ---Media ---
 MAX_LENGTH_MEDIA_FILEPATH = 2048
 MEDIA_PATH_DISPLAY_LENGTH = 60
+
+# --- Booking ---
+MAX_LENGTH_BOOKING_NOTE = 255
