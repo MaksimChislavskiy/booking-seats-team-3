@@ -7,6 +7,7 @@ from .table import (
     TableShortInfo,
     TableUpdate,
 )
+from .user import UserCreate, UserUpdate
 
 __all__ = [
     'CafeShortInfo',
@@ -17,4 +18,6 @@ __all__ = [
     'TableInfo',
     'TableShortInfo',
     'TableUpdate',
+    'UserCreate',
+    'UserUpdate',
 ]
