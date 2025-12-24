@@ -6,12 +6,12 @@ from .table import Table
 from .user import User, UserRole
 
 __all__ = [
-    'Media',
     'Booking',
+    'TableSlotBooking',
     'Cafe',
+    'Media',
     'Slot',
     'Table',
     'User',
     'UserRole',
-    'TableSlotBooking',
 ]
