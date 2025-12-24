@@ -1,3 +1,4 @@
+# FIXME: Удалить этот код
 from typing import AsyncGenerator
 
 from fastapi import Depends, HTTPException, status
