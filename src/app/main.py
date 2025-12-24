@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routers import main_router
 from app.core.config import settings
 from app.core.logging import setup_logging
+from app.core.openapi import OPENAPI_TAGS
 
 logger = setup_logging()
 
@@ -23,6 +24,7 @@ app = FastAPI(
     title=settings.app_title,
     description=settings.app_description,
     lifespan=lifespan,
+    openapi_tags=OPENAPI_TAGS,
 )
 
 app.include_router(main_router)

@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[3]
@@ -24,7 +25,10 @@ MAX_LENGTH_USER_PHONE = 50
 MAX_LENGTH_USER_PASSWORD_HASH = 255
 MAX_LENGTH_USER_TG_ID = 50
 MIN_LENGTH_USER_PASSWORD = 6
-PASSWORD_PATTERN = r'^[A-Za-z0-9_@#\$%!?\&\*]+$'
+MAX_LENGTH_USER_PASSWORD = 50
+PASSWORD_PATTERN = re.compile(r'^[A-Za-z0-9_@#\$%!?\&\*]+$')
+EMAIL_PATTERN = re.compile(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
+PHONE_PATTERN = re.compile(r'^(\+7|8)\d{10}$')
 
 # --- Slot ---
 MAX_LENGTH_SLOT_DESCRIPTION = 255
