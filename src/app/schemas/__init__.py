@@ -7,27 +7,28 @@ from .slot import (
     TimeSlotUpdate,
 )
 from .table import (
-    TableBase,
     TableCreate,
     TableInfo,
     TableShortInfo,
     TableUpdate,
 )
-from .user import UserCreate, UserUpdate
+from .user import UserCreate, UserInfo, UserShortInfo, UserUpdate
 
 __all__ = [
     'CafeShortInfo',
     'MediaData',
     'MediaInfo',
+    'TimeSlotShortInfo',
     'TimeSlotCreate',
     'TimeSlotInfo',
     'TimeSlotShortInfo',
     'TimeSlotUpdate',
-    'TableBase',
     'TableCreate',
     'TableInfo',
     'TableShortInfo',
     'TableUpdate',
     'UserCreate',
+    'UserInfo',
+    'UserShortInfo',
     'UserUpdate',
 ]
