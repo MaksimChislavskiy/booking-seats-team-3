@@ -4,12 +4,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.constants import MAX_LENGTH_BOOKING_NOTE
 from app.models import BookingStatus
-from app.schemas import (
-    CafeShortInfo,
-    TableShortInfo,
-    TimeSlotShortInfo,
-    UserShortInfo,
-)
+from app.schemas.cafe import CafeShortInfo
+from app.schemas.slot import TimeSlotShortInfo
+from app.schemas.table import TableShortInfo
+from app.schemas.user import UserShortInfo
 
 
 class TableSlot(BaseModel):
