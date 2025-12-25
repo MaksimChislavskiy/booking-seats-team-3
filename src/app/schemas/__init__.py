@@ -1,3 +1,4 @@
+from .booking import BookingCreate, BookingInfo, BookingUpdate
 from .cafe import CafeShortInfo
 from .media import MediaData, MediaInfo
 from .slot import (
@@ -15,6 +16,9 @@ from .table import (
 from .user import UserCreate, UserInfo, UserShortInfo, UserUpdate
 
 __all__ = [
+    'BookingCreate',
+    'BookingInfo',
+    'BookingUpdate',
     'CafeShortInfo',
     'MediaData',
     'MediaInfo',
