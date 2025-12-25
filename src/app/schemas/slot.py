@@ -1,2 +1,2 @@
 class TimeSlotShortInfo:
-    """Заглушка"""
+    """Заглушка."""
