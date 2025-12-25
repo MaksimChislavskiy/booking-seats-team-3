@@ -1,5 +1,6 @@
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Any, Mapping
+from typing import Annotated, Any
 
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -11,7 +12,7 @@ from app.core.config import settings
 from app.core.db import get_async_session
 from app.core.security import verify_password
 from app.crud import user_crud
-from app.models import User
+from app.models import User, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/login')
 
@@ -123,7 +124,7 @@ async def get_current_user(
 
 
 async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
+    user: Annotated[User, Depends(get_current_user)],
 ) -> User:
     """Возвращает текущего активного пользователя.
 
@@ -131,7 +132,7 @@ async def get_current_active_user(
     доступных только активным пользователям.
 
     Args:
-        current_user: Пользователь, полученный из access-токена.
+        user: Пользователь, полученный из access-токена.
 
     Returns:
         Активный пользователь.
@@ -140,9 +141,48 @@ async def get_current_active_user(
         HTTPException: 403, если пользователь неактивен.
 
     """
-    if not current_user.active:
+    if not user.active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Inactive user',
         )
-    return current_user
+    return user
+
+
+def require_roles(*roles: UserRole) -> Callable[..., User]:
+    """Factory-функция для проверки ролей пользователя.
+
+    Принимает одну или несколько допустимых ролей и возвращает
+    dependency-функцию, которая:
+    - получает текущего активного пользователя
+    - проверяет, что его роль входит в список допустимых
+    - возвращает пользователя при успешной проверке
+
+    Используется в Depends(...) для ограничения доступа
+    к эндпоинтам по ролям.
+
+    Args:
+        *roles: Допустимые роли пользователя (UserRole).
+
+    Returns:
+        Dependency-функция, возвращающая User.
+
+    Raises:
+        HTTPException: 403, если роль пользователя недопустима.
+
+    """
+
+    def dependency(user: User = Depends(get_current_active_user)) -> User:
+        if user.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='Недостаточно прав доступа',
+            )
+        return user
+
+    return dependency
+
+
+current_active_user = get_current_active_user
+current_admin = require_roles(UserRole.ADMIN)
+current_admin_or_manager = require_roles(UserRole.ADMIN, UserRole.MANAGER)
