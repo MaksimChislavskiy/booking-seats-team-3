@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
 from app.core.db import get_async_session
-from app.crud.slot import slot as crud_slot
 from app.crud.cafe import cafe as crud_cafe
+from app.crud.slot import slot as crud_slot
 from app.models.users import User
 from app.schemas.slot import TimeSlotCreate, TimeSlotRead, TimeSlotUpdate
 
@@ -61,14 +61,13 @@ async def get_time_slots_list(
                 detail='Нет доступа к неактивному кафе',
             )
         show_all = False
-    slots = await crud_slot.get_by_cafe(
+    return await crud_slot.get_by_cafe(
         session=db,
         cafe_id=cafe_id,
         skip=skip,
         limit=limit,
         show_all=show_all,
     )
-    return slots
 
 
 @slots_router.post(
