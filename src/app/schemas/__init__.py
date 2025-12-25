@@ -1,8 +1,12 @@
 from .cafe import CafeShortInfo
 from .media import MediaData, MediaInfo
-from .slot import TimeSlotShortInfo
+from .slot import (
+    TimeSlotCreate,
+    TimeSlotInfo,
+    TimeSlotShortInfo,
+    TimeSlotUpdate,
+)
 from .table import (
-    TableBase,
     TableCreate,
     TableInfo,
     TableShortInfo,
@@ -15,7 +19,10 @@ __all__ = [
     'MediaData',
     'MediaInfo',
     'TimeSlotShortInfo',
-    'TableBase',
+    'TimeSlotCreate',
+    'TimeSlotInfo',
+    'TimeSlotShortInfo',
+    'TimeSlotUpdate',
     'TableCreate',
     'TableInfo',
     'TableShortInfo',
