@@ -17,12 +17,11 @@ class CRUDTable(CRUDBase):
         cafe_id: int,
         table_id: int,
     ) -> Table | None:
-        """Получение стола по ID с учётом прав пользователя:
+        """Получение стола по ID с учётом прав пользователя.
 
         - Для USER: только активные столы (is_active=True)
         - Для ADMIN/MANAGER: любые столы.
         """
-
         logger.info(
             'Запрос стола. cafe_id=%d, table_id=%d',
             cafe_id, table_id,
@@ -43,12 +42,11 @@ class CRUDTable(CRUDBase):
         table_id: int,
         user_role: UserRole,
     ) -> Table | None:
-        """Получение стола по ID с учётом прав пользователя:
+        """Получение стола по ID с учётом прав пользователя.
 
         - Для USER: только активные столы (is_active=True)
         - Для ADMIN/MANAGER: любые столы.
         """
-
         logger.info(
             'Запрос стола с фильтрацией по роли. '
             'cafe_id=%d, table_id=%d, роль=%s',
