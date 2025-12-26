@@ -12,7 +12,7 @@ from app.schemas.user import UserInfo
 from app.services.auth import (
     authenticate_user,
     create_access_token,
-    get_current_active_user,
+    current_active_user,
 )
 
 router = APIRouter()
@@ -72,7 +72,7 @@ async def login(
     summary='Получение данных текущего пользователя',
 )
 async def me(
-    user: Annotated[User, Depends(get_current_active_user)],
+    user: Annotated[User, Depends(current_active_user)],
 ) -> UserInfo:
     """Пример для вызова информации о пользователе."""
     return user
