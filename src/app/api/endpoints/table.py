@@ -42,11 +42,11 @@ async def get_table(
     )
     cafe = await check_cafe_exists(cafe_id, session)
     logger.debug(
-        'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id},)
+        'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
     table = await table_crud.get_by_id_id_active(
         session=session,
         cafe_id=cafe.id,
-        id=table_id,
+        table_id=table_id,
         user_role=current_user.role,
     )
     if not table:
@@ -100,11 +100,11 @@ async def update_table(
     )
     cafe = await check_cafe_exists(cafe_id, session)
     logger.debug(
-        'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id},)
+        'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
     table = await table_crud.get_by_id_id(
         session=session,
         cafe_id=cafe.id,
-        id=table_id,
+        table_id=table_id,
     )
     if not table:
         logger.warning(
@@ -167,7 +167,7 @@ async def create_table(
     )
     await check_cafe_exists(cafe_id, session)
     logger.debug(
-        'Кафе существует. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id},)
+        'Кафе существует. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
     new_table = await table_crud.create(
         obj_in=data,
         session=session,
@@ -205,7 +205,7 @@ async def list_tables(
     )
     await check_cafe_exists(cafe_id, session)
     logger.debug(
-        'Кафе существует. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id},)
+        'Кафе существует. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
     can_show_all = current_user.role in {UserRole.ADMIN, UserRole.MANAGER}
     if show_all and can_show_all:
         logger.debug(

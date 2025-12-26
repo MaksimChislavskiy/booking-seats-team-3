@@ -20,7 +20,7 @@ async def check_cafe_exists(
         logger.warning(
             'Кафе не найдено. ID=%d',
             cafe_id,
-            extra={'cafe_id': cafe_id}
+            extra={'cafe_id': cafe_id},
         )
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,

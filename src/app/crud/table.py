@@ -15,23 +15,24 @@ class CRUDTable(CRUDBase):
         self,
         session: AsyncSession,
         cafe_id: int,
-        id: int,
+        table_id: int,
     ) -> Table | None:
         """Получение стола по ID с учётом прав пользователя:
 
         - Для USER: только активные столы (is_active=True)
-        - Для ADMIN/MANAGER: любые столы
+        - Для ADMIN/MANAGER: любые столы.
         """
+
         logger.info(
             'Запрос стола. cafe_id=%d, table_id=%d',
-            cafe_id, id,
-            extra={'cafe_id': cafe_id, 'table_id': id},
+            cafe_id, table_id,
+            extra={'cafe_id': cafe_id, 'table_id': table_id},
         )
         result = await session.execute(
             select(Table).where(
                 Table.cafe_id == cafe_id,
-                Table.id == id,
-            )
+                Table.id == table_id,
+            ),
         )
         return result.scalars().first()
 
@@ -39,44 +40,45 @@ class CRUDTable(CRUDBase):
         self,
         session: AsyncSession,
         cafe_id: int,
-        id: int,
-        user_role: UserRole
+        table_id: int,
+        user_role: UserRole,
     ) -> Table | None:
         """Получение стола по ID с учётом прав пользователя:
 
         - Для USER: только активные столы (is_active=True)
-        - Для ADMIN/MANAGER: любые столы
+        - Для ADMIN/MANAGER: любые столы.
         """
+
         logger.info(
             'Запрос стола с фильтрацией по роли. '
             'cafe_id=%d, table_id=%d, роль=%s',
-            cafe_id, id, user_role.value,
+            cafe_id, table_id, user_role.value,
             extra={
                 'cafe_id': cafe_id,
-                'table_id': id,
+                'table_id': table_id,
                 'user_role': user_role.value},
         )
         query = select(Table).where(
             Table.cafe_id == cafe_id,
-            Table.id == id,
+            Table.id == table_id,
         )
         if user_role == UserRole.USER:
             logger.debug(
                 'Фильтрация по is_active для USER. cafe_id=%d, table_id=%d',
-                cafe_id, id,
+                cafe_id, table_id,
                 extra={
                     'cafe_id': cafe_id,
-                    'table_id': id,
+                    'table_id': table_id,
                     'user_role': user_role.value},
             )
             query = query.where(Table.is_active)
         else:
             logger.debug(
                 'Доступ без фильтрации. cafe_id=%d, table_id=%d, роль=%s',
-                cafe_id, id, user_role.value,
+                cafe_id, table_id, user_role.value,
                 extra={
                     'cafe_id': cafe_id,
-                    'table_id': id,
+                    'table_id': table_id,
                     'user_role': user_role.value},
             )
         result = await session.execute(query)
