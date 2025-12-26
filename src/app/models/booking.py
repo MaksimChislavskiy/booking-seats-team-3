@@ -1,4 +1,5 @@
 from datetime import date
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     CheckConstraint,
@@ -14,6 +15,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.constants import MAX_LENGTH_BOOKING_NOTE
 from app.core.db import Base
 from app.models.enum import BookingStatus
+
+if TYPE_CHECKING:
+    from app.models import Slot, Table
 
 
 class TableSlotBooking(Base):
@@ -41,9 +45,18 @@ class TableSlotBooking(Base):
         ForeignKey('booking.id', ondelete='RESTRICT'),
         nullable=False,
     )
+
     booking: Mapped['Booking'] = relationship(
         'Booking',
         back_populates='tables_slots',
+    )
+    table: Mapped['Table'] = relationship(
+        'Table',
+        lazy='selectin',
+    )
+    slot: Mapped['Slot'] = relationship(
+        'Slot',
+        lazy='selectin',
     )
 
     __table_args__ = (
