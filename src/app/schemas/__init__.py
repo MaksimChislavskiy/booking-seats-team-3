@@ -1,32 +1,42 @@
+from .auth import AuthData, AuthToken
+from .booking import BookingCreate, BookingInfo, BookingUpdate
 from .cafe import CafeShortInfo
+from .error import ErrorResponse
 from .media import MediaData, MediaInfo
+from .slot import (
+    TimeSlotCreate,
+    TimeSlotInfo,
+    TimeSlotShortInfo,
+    TimeSlotUpdate,
+)
 from .table import (
-    TableBase,
     TableCreate,
     TableInfo,
     TableShortInfo,
     TableUpdate,
 )
-from .user import (
-    UserBase,
-    UserCreate,
-    UserInfo,
-    UserShortInfo,
-    UserUpdate,
-)
+from .user import UserCreate, UserInfo, UserShortInfo, UserUpdate
 
 __all__ = [
-    'UserBase',
-    'UserCreate',
-    'UserUpdate',
-    'UserInfo',
-    'UserShortInfo',
+    'AuthData',
+    'AuthToken',
+    'BookingCreate',
+    'BookingInfo',
+    'BookingUpdate',
     'CafeShortInfo',
+    'ErrorResponse',
     'MediaData',
     'MediaInfo',
-    'TableBase',
+    'TimeSlotCreate',
+    'TimeSlotInfo',
+    'TimeSlotShortInfo',
+    'TimeSlotUpdate',
     'TableCreate',
     'TableInfo',
     'TableShortInfo',
     'TableUpdate',
+    'UserCreate',
+    'UserInfo',
+    'UserShortInfo',
+    'UserUpdate',
 ]
