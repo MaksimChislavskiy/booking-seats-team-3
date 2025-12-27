@@ -2,8 +2,8 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import ValidationError
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
 from app.core.user import current_manager_or_admin, current_user
