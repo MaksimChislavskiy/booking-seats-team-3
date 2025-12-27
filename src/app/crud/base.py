@@ -200,9 +200,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
         Метод не удаляет запись физически из базы данных.
         Вместо этого объект помечается как неактивный путём установки
-        флага `active = False`.
+        флага `is_active = False`.
         """
-        db_obj.active = False
+        db_obj.is_active = False
         await session.commit()
         return db_obj
 

@@ -22,7 +22,6 @@ __all__ = [
     'CafeShortInfo',
     'MediaData',
     'MediaInfo',
-    'TimeSlotShortInfo',
     'TimeSlotCreate',
     'TimeSlotInfo',
     'TimeSlotShortInfo',

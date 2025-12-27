@@ -4,7 +4,7 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.core.constants import MAX_LENGTH_SLOT_DESCRIPTION
-from app.schemas import CafeShortInfo
+from app.schemas.cafe import CafeShortInfo
 
 
 class TimeSlotBase(BaseModel):

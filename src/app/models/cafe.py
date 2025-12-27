@@ -18,7 +18,7 @@ from app.core.constants import (
 from app.core.db import Base
 
 if TYPE_CHECKING:
-    from app.models import User
+    from app.models.user import User
 
 
 class Cafe(Base):
