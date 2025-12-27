@@ -18,6 +18,8 @@ from app.core.constants import (
 from app.core.db import Base
 
 if TYPE_CHECKING:
+    from app.models.slot import Slot
+    from app.models.table import Table
     from app.models.user import User
 
 
@@ -61,8 +63,19 @@ class Cafe(Base):
         ForeignKey('media.id', ondelete='RESTRICT'),
         nullable=True,
     )
+
     managers: Mapped[list['User']] = relationship(
         'User',
+        back_populates='cafe',
+        lazy='selectin',
+    )
+    tables: Mapped[list['Table']] = relationship(
+        'Table',
+        back_populates='cafe',
+        lazy='selectin',
+    )
+    slots: Mapped[list['Slot']] = relationship(
+        'Slot',
         back_populates='cafe',
         lazy='selectin',
     )

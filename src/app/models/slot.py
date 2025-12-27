@@ -42,6 +42,7 @@ class Slot(Base):
         String(MAX_LENGTH_SLOT_DESCRIPTION),
         nullable=True,
     )
+
     cafe: Mapped['Cafe'] = relationship(
         'Cafe',
         back_populates='slots',
