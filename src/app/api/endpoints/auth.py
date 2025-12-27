@@ -1,19 +1,12 @@
-from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.db import get_async_session
-from app.models import User
-from app.schemas.auth import AuthData, AuthToken
-from app.schemas.user import UserInfo
-from app.services.auth import (
-    authenticate_user,
-    create_access_token,
-    current_active_user,
-)
+from app.schemas import AuthData, AuthToken
+from app.services.auth import authenticate_user
+from app.services.token import create_access_token
 
 router = APIRouter()
 
@@ -47,7 +40,7 @@ async def login(
     """
     user = await authenticate_user(
         login=data.login,
-        password=data.password,
+        password=data.password.get_secret_value(),
         session=session,
     )
     if not user:
@@ -56,23 +49,6 @@ async def login(
             detail='Неверный логин или пароль',
             headers={'WWW-Authenticate': 'Bearer'},
         )
-    access_token_expires = timedelta(
-        minutes=settings.access_token_expire_minutes,
-    )
-    access_token = create_access_token(
-        payload={'sub': str(user.id)},
-        expires_delta=access_token_expires,
-    )
+
+    access_token = create_access_token(user)
     return AuthToken(access_token=access_token, token_type='bearer')
-
-
-@router.get(
-    '/users/me/',
-    response_model=UserInfo,
-    summary='Получение данных текущего пользователя',
-)
-async def me(
-    user: Annotated[User, Depends(current_active_user)],
-) -> UserInfo:
-    """Пример для вызова информации о пользователе."""
-    return user

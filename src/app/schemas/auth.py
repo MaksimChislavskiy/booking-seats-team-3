@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, SecretStr, field_validator
 
 from app.core.constants import (
     EMAIL_PATTERN,
@@ -15,7 +15,7 @@ class AuthData(BaseModel):
         ...,
         description='Логин пользователя (email или телефон)',
     )
-    password: str = Field(
+    password: SecretStr = Field(
         ...,
         min_length=MIN_LENGTH_USER_PASSWORD,
         max_length=MAX_LENGTH_USER_PASSWORD,

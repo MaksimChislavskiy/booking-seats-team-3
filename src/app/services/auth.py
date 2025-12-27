@@ -1,55 +1,18 @@
-from collections.abc import Callable, Mapping
-from datetime import datetime, timedelta, timezone
-from typing import Annotated, Any
+from collections.abc import Callable
+from typing import Annotated
 
-import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.db import get_async_session
 from app.core.security import verify_password
 from app.crud import user_crud
 from app.models import User, UserRole
+from app.services.token import _decode_jwt
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/login')
-
-
-def create_access_token(
-    payload: Mapping[str, Any],
-    expires_delta: timedelta | None = None,
-) -> str:
-    """Создаёт JWT access-токен.
-
-    В токен добавляется поле `exp`, определяющее время его истечения.
-    Остальные данные передаются через payload (например, `sub`).
-
-    Args:
-        payload: Данные, которые будут закодированы в JWT.
-            Обычно содержит идентификатор пользователя (`sub`).
-        expires_delta: Время жизни токена. Если не указано,
-            используется значение по умолчанию из конфигурации.
-
-    Returns:
-        JWT access-токен в виде строки.
-
-    """
-    to_encode = dict(payload)
-
-    expire = datetime.now(timezone.utc) + (
-        expires_delta
-        if expires_delta is not None
-        else timedelta(minutes=settings.access_token_expire_minutes)
-    )
-    to_encode['exp'] = expire
-
-    return jwt.encode(
-        payload=to_encode,
-        key=settings.secret_key,
-        algorithm=settings.algorithm,
-    )
 
 
 async def authenticate_user(
@@ -105,11 +68,7 @@ async def get_current_user(
         headers={'WWW-Authenticate': 'Bearer'},
     )
     try:
-        payload = jwt.decode(
-            jwt=token,
-            key=settings.secret_key,
-            algorithms=[settings.algorithm],
-        )
+        payload = _decode_jwt(token)
         user_id_str: str | None = payload.get('sub')
         if user_id_str is None:
             raise credentials_exception
