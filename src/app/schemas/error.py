@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 
-class CustomError(BaseModel):
+class ErrorResponse(BaseModel):
     """Схема ошибки для ответов API.
 
     Используется для стандартизации формата ошибок,

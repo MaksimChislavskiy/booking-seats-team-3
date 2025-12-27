@@ -1,7 +1,7 @@
 from .auth import AuthData, AuthToken
 from .booking import BookingCreate, BookingInfo, BookingUpdate
 from .cafe import CafeShortInfo
-from .error import CustomError
+from .error import ErrorResponse
 from .media import MediaData, MediaInfo
 from .slot import (
     TimeSlotCreate,
@@ -24,7 +24,7 @@ __all__ = [
     'BookingInfo',
     'BookingUpdate',
     'CafeShortInfo',
-    'CustomError',
+    'ErrorResponse',
     'MediaData',
     'MediaInfo',
     'TimeSlotShortInfo',
