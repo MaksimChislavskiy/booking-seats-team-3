@@ -1,17 +1,18 @@
-from http import HTTPStatus
+import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 from app.core.db import get_async_session
-from app.core.logging import setup_logging
 from app.core.user import current_manager_or_admin, current_user
 from app.crud.table import table_crud
 from app.models import Table, User, UserRole
-from app.schemas.table import TableCreate, TableInfo, TableUpdate
+from app.schemas import TableCreate, TableInfo, TableUpdate
 from app.validators.table import check_cafe_exists
 
-logger = setup_logging()
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -60,7 +61,7 @@ async def get_table(
             },
         )
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f'Стол {table_id} не найден.',
         )
     logger.info(
@@ -113,7 +114,7 @@ async def update_table(
             extra={'cafe_id': cafe_id, 'table_id': table_id},
         )
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f'Стол {table_id} не найден.',
         )
     try:
@@ -127,19 +128,57 @@ async def update_table(
             cafe_id, table_id,
             extra={'cafe_id': cafe_id, 'table_id': table_id},
         )
-    except Exception as e:
+    except ValidationError as e:
         logger.error(
-            'Ошибка обновления стола. cafe_id=%d, table_id=%d, ошибка=%s',
+            'Ошибка валидации данных. cafe_id=%d, table_id=%d, ошибка=%s',
             cafe_id, table_id, str(e),
-            extra={
-                'cafe_id': cafe_id,
-                'table_id': table_id,
-                'error': str(e),
-            },
+            extra={'cafe_id': cafe_id,
+                   'table_id': table_id,
+                   'error': e.errors(),
+                   },
         )
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="Ошибка обновления",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Некорректные данные. Проверьте поля.",
+        )
+    except IntegrityError as e:
+        logger.error(
+            'Ошибка целостности данных БД. cafe_id=%d, table_id=%d, ошибка=%s',
+            cafe_id, table_id, str(e),
+            extra={'cafe_id': cafe_id,
+                   'table_id': table_id,
+                   'error': repr(e),
+                   },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Конфликт данных. Проверьте входные параметры.",
+        )
+    except OperationalError as e:
+        logger.error(
+            'Операционная ошибка БД. cafe_id=%d, table_id=%d, ошибка=%s',
+            cafe_id, table_id, str(e),
+            extra={'cafe_id': cafe_id,
+                   'table_id': table_id,
+                   'error': repr(e),
+                   },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Временная ошибка сервиса. Попробуйте позже.",
+        )
+    except Exception as e:  # Крайний случай — неизвестные ошибки.
+        logger.exception(
+            'Неожиданная ошибка при обновлении стола. cafe_id=%d, table_id=%d',
+            cafe_id, table_id,
+            extra={'cafe_id': cafe_id,
+                   'table_id': table_id,
+                   'error': repr(e),
+                   },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Внутренняя ошибка сервера.",
         )
     return updated_table
 

@@ -1,6 +1,4 @@
-from http import HTTPStatus
-
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import setup_logging
@@ -23,7 +21,7 @@ async def check_cafe_exists(
             extra={'cafe_id': cafe_id},
         )
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f'Кафе {cafe_id} не найдено.',
         )
     return cafe
