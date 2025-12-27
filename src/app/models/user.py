@@ -15,7 +15,7 @@ from app.core.db import Base
 from app.models.enum import UserRole
 
 if TYPE_CHECKING:
-    from app.models import Cafe
+    from app.models.cafe import Cafe
 
 
 class User(Base):

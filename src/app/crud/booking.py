@@ -7,3 +7,6 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
     """CRUD для модели Booking."""
 
     pass
+
+
+booking_crud = CRUDBooking(Booking)

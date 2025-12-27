@@ -17,7 +17,8 @@ from app.core.db import Base
 from app.models.enum import BookingStatus
 
 if TYPE_CHECKING:
-    from app.models import Slot, Table
+    from app.models.slot import Slot
+    from app.models.table import Table
 
 
 class TableSlotBooking(Base):

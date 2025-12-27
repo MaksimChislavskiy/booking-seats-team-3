@@ -27,7 +27,6 @@ __all__ = [
     'ErrorResponse',
     'MediaData',
     'MediaInfo',
-    'TimeSlotShortInfo',
     'TimeSlotCreate',
     'TimeSlotInfo',
     'TimeSlotShortInfo',

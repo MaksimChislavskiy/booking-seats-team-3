@@ -11,9 +11,10 @@ __all__ = [
     'TableSlotBooking',
     'Cafe',
     'BookingStatus',
+    'UserRole',
     'Media',
     'Slot',
     'Table',
     'User',
-    'UserRole',
+
 ]
