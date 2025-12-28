@@ -88,9 +88,7 @@ class UserInfo(UserBase):
     created_at: datetime = Field(..., description='Дата создания')
     updated_at: datetime = Field(..., description='Дата обновления')
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserShortInfo(UserBase):
@@ -98,6 +96,4 @@ class UserShortInfo(UserBase):
 
     id: int = Field(..., description='ID пользователя')
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
+    model_config = ConfigDict(from_attributes=True)
