@@ -110,7 +110,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def create(
         self,
-        obj_in: CreateSchemaType,
+        obj_in: CreateSchemaType | dict[str, Any],
         *,
         related: dict[str, list] | None = None,
         session: AsyncSession,
@@ -131,12 +131,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             Созданный объект модели.
 
         """
-        obj_data = obj_in.model_dump()
+        data = self._extract_data(obj_in)
         model_fields = self._get_model_fields()
 
         filtered_data = {
             field: value
-            for field, value in obj_data.items()
+            for field, value in data.items()
             if field in model_fields
         }
 
@@ -153,7 +153,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def update(
         self,
         db_obj: ModelType,
-        obj_in: UpdateSchemaType,
+        obj_in: UpdateSchemaType | dict[str, Any],
         *,
         related: dict[str, list] | None = None,
         session: AsyncSession,
@@ -174,7 +174,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             Обновлённый объект модели.
 
         """
-        update_data = obj_in.model_dump(exclude_unset=True)
+        update_data = self._extract_data(obj_in)
         model_fields = self._get_model_fields()
 
         for field, value in update_data.items():
@@ -205,6 +205,17 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_obj.is_active = False
         await session.commit()
         return db_obj
+
+    def _extract_data(
+        self,
+        obj_in: BaseModel | dict[str, Any],
+    ) -> dict[str, Any]:
+        """Приводит входные данные к dict."""
+        if isinstance(obj_in, BaseModel):
+            return obj_in.model_dump(exclude_unset=True)
+        if isinstance(obj_in, dict):
+            return obj_in
+        raise TypeError('obj_in должен быть схемой от BaseModel или dict')
 
     def _get_model_fields(self) -> set[str]:
         """Возвращает имена всех полей модели."""
