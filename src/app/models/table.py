@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import MAX_SEATS_NUMBER, MIN_SEATS_NUMBER
 from app.core.db import Base
-from app.models import Cafe
+from app.models.cafe import Cafe
 
 
 class Table(Base):

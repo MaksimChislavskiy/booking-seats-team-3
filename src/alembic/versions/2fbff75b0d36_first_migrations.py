@@ -1,8 +1,8 @@
 """First migrations
 
-Revision ID: b189c2cd73c7
+Revision ID: 2fbff75b0d36
 Revises: 
-Create Date: 2025-12-25 19:16:20.593453
+Create Date: 2025-12-29 14:23:00.488726
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'b189c2cd73c7'
+revision: str = '2fbff75b0d36'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,7 +27,7 @@ def upgrade() -> None:
     sa.Column('size', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('file_path')
     )
@@ -40,7 +40,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.ForeignKeyConstraint(['photo_id'], ['media.id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name', 'address', name='uq_cafe_name_address')
@@ -57,7 +57,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.CheckConstraint('start_time < end_time', name='check_slot_time_range'),
     sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('id'),
@@ -72,7 +72,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.CheckConstraint('seat_number BETWEEN 1 AND 24', name='check_seat_number_range'),
     sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('id')
@@ -90,7 +90,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.CheckConstraint('(email IS NOT NULL) OR (phone IS NOT NULL)', name='check_user_email_or_phone_required'),
     sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('id'),
@@ -110,7 +110,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.CheckConstraint('booking_date >= CURRENT_DATE', name='check_booking_date_not_past'),
     sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ondelete='RESTRICT'),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='RESTRICT'),
@@ -124,7 +124,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.ForeignKeyConstraint(['booking_id'], ['booking.id'], ondelete='RESTRICT'),
     sa.ForeignKeyConstraint(['slot_id'], ['slot.id'], ondelete='RESTRICT'),
     sa.ForeignKeyConstraint(['table_id'], ['table.id'], ondelete='RESTRICT'),

@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.constants import MAX_SEATS_NUMBER, MIN_SEATS_NUMBER
-from app.schemas import CafeShortInfo
+from app.schemas.cafe import CafeShortInfo
 
 
 class TableBase(BaseModel):
@@ -86,7 +86,7 @@ class TableInfo(TableBase):
 
     model_config = ConfigDict(
         from_attributes=True,
-        )
+    )
 
 
 class TableShortInfo(TableBase):
