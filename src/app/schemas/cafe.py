@@ -1,120 +1,144 @@
-import re
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 
-from src.app.core.constants import (
-    CAFE_ADDRESS_MAX_LENGTH,
-    CAFE_NAME_MAX_LENGTH,
-    CAFE_PHONE_MAX_LENGTH,
+from app.core.constants import (
+    MAX_LENGTH_CAFE_ADDRESS,
+    MAX_LENGTH_CAFE_DESCRIPTION,
+    MAX_LENGTH_CAFE_NAME,
+    MAX_LENGTH_CAFE_PHONE,
+    MIN_LENGTH_CAFE_ADDRESS,
+    MIN_LENGTH_CAFE_NAME,
+    MIN_LENGTH_CAFE_PHONE,
 )
+from app.schemas import UserShortInfo
 
 
 class CafeBase(BaseModel):
-    """Общие поля для всех схем Cafe."""
+    """Базовая схема кафе с общими полями сущности."""
 
     name: str = Field(
         ...,
-        max_length=CAFE_NAME_MAX_LENGTH,
+        min_length=MIN_LENGTH_CAFE_NAME,
+        max_length=MAX_LENGTH_CAFE_NAME,
         description='Название кафе',
     )
     address: str = Field(
         ...,
-        max_length=CAFE_ADDRESS_MAX_LENGTH,
+        min_length=MIN_LENGTH_CAFE_ADDRESS,
+        max_length=MAX_LENGTH_CAFE_ADDRESS,
         description='Адрес кафе',
     )
     phone: str = Field(
         ...,
-        max_length=CAFE_PHONE_MAX_LENGTH,
-        description='Телефон кафе',
+        min_length=MIN_LENGTH_CAFE_PHONE,
+        max_length=MAX_LENGTH_CAFE_PHONE,
+        description='Контактный телефон кафе',
     )
-    description: str | None = None
-    photo_id: UUID | None = None
-    managers: list[int] = Field(
-        default_factory=list,
-        description='ID менеджеров кафе',
+    description: str | None = Field(
+        None,
+        max_length=MAX_LENGTH_CAFE_DESCRIPTION,
+        description='Описание кафе',
+    )
+    photo_id: UUID = Field(
+        ...,
+        description='UUID фотографии кафе',
     )
 
 
 class CafeCreate(CafeBase):
     """Схема для создания нового кафе."""
 
+    managers_id: list[int] = Field(
+        ...,
+        min_length=1,
+        description='Список ID пользователей, назначаемых менеджерами кафе',
+    )
+
     model_config = ConfigDict(extra='forbid')
-
-    @field_validator('name')
-    @classmethod
-    def name_not_empty(cls, value: str) -> str:
-        """Проверка названия кафе на пустоту."""
-        if not value.strip():
-            raise ValueError('Название кафе не может быть пустым')
-        return value.strip()
-
-    @field_validator('phone')
-    @classmethod
-    def validate_phone(cls, value: str) -> str:
-        """Проверка формата телефона с использованием регулярного выражения."""
-        cleaned = re.sub(r'\D', '', value)
-        if not re.match(r'^7\d{10}$', cleaned):
-            raise ValueError(
-                'Телефон должен быть в формате +7 или 8 с 10 цифрами после',
-            )
-        return cleaned
 
 
 class CafeUpdate(BaseModel):
-    """Схема для частичного обновления кафе."""
+    """Схема для частичного обновления данных кафе."""
+
+    name: str | None = Field(
+        None,
+        min_length=MIN_LENGTH_CAFE_NAME,
+        max_length=MAX_LENGTH_CAFE_NAME,
+        description='Название кафе',
+    )
+    address: str | None = Field(
+        None,
+        min_length=MIN_LENGTH_CAFE_ADDRESS,
+        max_length=MAX_LENGTH_CAFE_ADDRESS,
+        description='Адрес кафе',
+    )
+    phone: str | None = Field(
+        None,
+        min_length=MIN_LENGTH_CAFE_PHONE,
+        max_length=MAX_LENGTH_CAFE_PHONE,
+        description='Контактный телефон кафе',
+    )
+    description: str | None = Field(
+        None,
+        max_length=MAX_LENGTH_CAFE_DESCRIPTION,
+        description='Описание кафе',
+    )
+    photo_id: UUID | None = Field(
+        None,
+        description='UUID фотографии кафе',
+    )
+    managers_id: list[int] | None = Field(
+        None,
+        description='Список ID пользователей, назначаемых менеджерами кафе',
+    )
+    is_active: bool | None = Field(
+        None,
+        description='Флаг активности кафе',
+    )
 
     model_config = ConfigDict(extra='forbid')
 
-    name: str | None = Field(None, max_length=CAFE_NAME_MAX_LENGTH)
-    address: str | None = Field(None, max_length=CAFE_ADDRESS_MAX_LENGTH)
-    phone: str | None = Field(None, max_length=CAFE_PHONE_MAX_LENGTH)
-    description: str | None = None
-    photo_id: UUID | None = None
-    managers: list[int] | None = None
-
-    @field_validator('name')
-    @classmethod
-    def name_not_empty(cls, value: str | None) -> str | None:
-        """Проверка названия кафе на пустоту (если передано)."""
-        if value is not None and not value.strip():
-            raise ValueError('Название кафе не может быть пустым')
-        return value.strip() if value is not None else value
-
-    @field_validator('phone')
-    @classmethod
-    def validate_phone(cls, value: str | None) -> str | None:
-        """Проверка формата телефона (если передано)."""
-        if value is None:
-            return value
-        cleaned = re.sub(r'\D', '', value)
-        if not re.match(r'^7\d{10}$', cleaned):
-            raise ValueError(
-                'Телефон должен быть в формате +7 или 8 с 10 цифрами после',
-            )
-        return cleaned
-
 
 class CafeInfo(CafeBase):
-    """Схема для чтения информации о кафе."""
+    """Схема для чтения полной информации о кафе."""
 
-    id: int
-    created_at: datetime
-    updated_at: datetime
-    is_active: bool
+    id: int = Field(..., description='ID кафе')
+    managers: list[UserShortInfo] = Field(
+        ...,
+        description='Список менеджеров кафе',
+    )
+    is_active: bool = Field(..., description='Флаг активности кафе')
+    created_at: datetime = Field(..., description='Дата создания')
+    updated_at: datetime = Field(..., description='Дата обновления')
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class CafeShortInfo(BaseModel):
-    """Укороченная схема для списков кафе."""
+    """Укороченная схема для чтения информации о кафе."""
 
-    id: int
-    name: str
-    address: str
-    phone: str
-    description: str | None
-    photo_id: UUID | None
+    id: int = Field(..., description='ID кафе')
+    name: str = Field(
+        ...,
+        description='Название кафе',
+    )
+    address: str = Field(
+        ...,
+        description='Адрес кафе',
+    )
+    phone: str = Field(
+        ...,
+        description='Контактный телефон кафе',
+    )
+    description: str | None = Field(
+        None,
+        description='Описание кафе',
+    )
+    photo_id: UUID | None = Field(
+        None,
+        description='UUID фотографии кафе',
+    )
 
     model_config = ConfigDict(from_attributes=True)
