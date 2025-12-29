@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.core.db import get_async_session
-from src.app.crud.cafe import cafe_crud
-from src.app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
+from app.core.db import get_async_session
+from app.crud.cafe import cafe_crud
+from app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
 
 router = APIRouter()
 
@@ -17,25 +17,23 @@ router = APIRouter()
 )
 async def create(
     cafe_in: CafeCreate,
-    db: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Создаёт новое кафе."""
-    return await cafe_crud.create(db, cafe_in)
+    return await cafe_crud.create(session, cafe_in)
 
 
 @router.get(
     '/',
     response_model=list[CafeInfo],
     summary='Список кафе',
-    description='Возвращает список всех кафе с пагинацией.',
+    description='Возвращает список всех кафе.',
 )
 async def read_list(
-    skip: int = 0,
-    limit: int = 100,
-    db: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session),
 ) -> list[CafeInfo]:
     """Возвращает список всех кафе."""
-    return await cafe_crud.get_multi(db, skip=skip, limit=limit)
+    return await cafe_crud.get_multi(session)
 
 
 @router.get(
@@ -46,10 +44,10 @@ async def read_list(
 )
 async def read(
     cafe_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Возвращает информацию о кафе."""
-    cafe = await cafe_crud.get(db, cafe_id)
+    cafe = await cafe_crud.get(session, cafe_id)
     if not cafe:
         raise HTTPException(status_code=404, detail='Кафе не найдено')
     return cafe
@@ -64,13 +62,13 @@ async def read(
 async def update(
     cafe_id: int,
     cafe_in: CafeUpdate,
-    db: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Обновляет данные кафе."""
-    cafe = await cafe_crud.get(db, cafe_id)
+    cafe = await cafe_crud.get(session, cafe_id)
     if not cafe:
         raise HTTPException(status_code=404, detail='Кафе не найдено')
-    return await cafe_crud.update(db, cafe, cafe_in)
+    return await cafe_crud.update(session, cafe, cafe_in)
 
 
 @router.delete(
@@ -81,10 +79,10 @@ async def update(
 )
 async def delete(
     cafe_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Удаляет кафе."""
-    cafe = await cafe_crud.get(db, cafe_id)
+    cafe = await cafe_crud.get(session, cafe_id)
     if not cafe:
         raise HTTPException(status_code=404, detail='Кафе не найдено')
-    await cafe_crud.delete(db, cafe)
+    await cafe_crud.delete(session, cafe)

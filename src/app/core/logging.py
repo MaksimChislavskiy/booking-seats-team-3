@@ -14,7 +14,7 @@ from app.core.constants import (
 LOGS_DIR.mkdir(exist_ok=True)
 
 
-def setup_logging() -> logging.Logger:
+def setup_logging() -> None:
     """Настраивает централизованное логирование."""
     log_format = '%(asctime)s [%(levelname)s] [%(user)s] %(message)s'
 
@@ -29,7 +29,7 @@ def setup_logging() -> logging.Logger:
     )
     file_handler.setFormatter(logging.Formatter(log_format))
 
-    logger = logging.getLogger('cafe_booking')
+    logger = logging.getLogger()
     logger.setLevel(settings.log_level)
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
@@ -44,5 +44,3 @@ def setup_logging() -> logging.Logger:
 
     console_handler.addFilter(user_filter)
     file_handler.addFilter(user_filter)
-
-    return logger
