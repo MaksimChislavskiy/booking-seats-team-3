@@ -1,14 +1,15 @@
--r requirements_style.txt
-
 alembic==1.17.2
 amqp==5.3.1
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.12.0
+argon2-cffi==25.1.0
+argon2-cffi-bindings==25.1.0
 asyncpg==0.31.0
 billiard==4.2.4
 celery==5.6.0
 certifi==2025.11.12
+cffi==2.0.0
 click==8.3.1
 click-didyoumean==0.3.1
 click-plugins==1.1.1.2
@@ -37,13 +38,16 @@ mdurl==0.1.2
 packaging==25.0
 prometheus_client==0.23.1
 prompt_toolkit==3.0.52
+pwdlib==0.3.0
+pycparser==2.23
 pydantic==2.12.5
 pydantic-settings==2.12.0
 pydantic_core==2.41.5
 Pygments==2.19.2
+PyJWT==2.10.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
-python-multipart==0.0.20
+python-multipart==0.0.21
 pytz==2025.2
 PyYAML==6.0.3
 redis==7.1.0

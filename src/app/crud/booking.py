@@ -1,4 +1,4 @@
-
+# === Твой код ===
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -129,4 +129,17 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
         return booking
 
 
-booking_crud = CRUDBooking()
+# === Текущий код из ветки develop ===
+# booking_crud = CRUDBooking()
+# from app.crud.base import CRUDBase
+# from app.models import Booking
+# from app.schemas import BookingCreate, BookingUpdate
+
+
+# class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
+#     """CRUD для модели Booking."""
+
+#     pass
+
+
+# booking_crud = CRUDBooking(Booking)
