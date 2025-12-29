@@ -1,4 +1,3 @@
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import CheckConstraint, ForeignKey, String
@@ -11,25 +10,12 @@ from app.core.constants import (
     MAX_LENGTH_USER_PHONE,
     MAX_LENGTH_USER_TG_ID,
     MAX_LENGTH_USER_USERNAME,
-    ROLE_ADMIN,
-    ROLE_MANAGER,
-    ROLE_USER,
 )
 from app.core.db import Base
+from app.models.enum import UserRole
 
 if TYPE_CHECKING:
-    from app.models import Cafe
-
-
-class UserRole(StrEnum):
-    """Роли пользователей.
-
-    Используется для ограничения допустимых значений роли пользователя.
-    """
-
-    ADMIN = ROLE_ADMIN
-    MANAGER = ROLE_MANAGER
-    USER = ROLE_USER
+    from app.models.cafe import Cafe
 
 
 class User(Base):
