@@ -10,6 +10,7 @@ from app.api.routers import main_router
 from app.core.config import settings
 from app.core.error_handlers import (
     http_exception_handler,
+    unhandled_exception_handler,
     user_already_exists_handler,
     user_not_found_handler,
     validation_error_handler,
@@ -48,7 +49,8 @@ app.add_middleware(
     allow_headers=['Authorization', 'Content-Type'],
 )
 
-app.add_exception_handler(UserNotFoundError, user_not_found_handler)
-app.add_exception_handler(UserAlreadyExistsError, user_already_exists_handler)
 app.add_exception_handler(RequestValidationError, validation_error_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(UserNotFoundError, user_not_found_handler)
+app.add_exception_handler(UserAlreadyExistsError, user_already_exists_handler)
+app.add_exception_handler(Exception, unhandled_exception_handler)
