@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
 from app.schemas import AuthData, AuthToken
+from app.schemas.error import ErrorResponse
 from app.services.auth import authenticate_user
 from app.services.token import create_access_token
 
@@ -16,6 +17,12 @@ router = APIRouter()
     response_model=AuthToken,
     summary='Получение токена авторизации',
     description='Возвращает токен для последующей авторизации пользователя.',
+    responses={
+        422: {
+            'model': ErrorResponse,
+            'description': 'Неверные имя пользователя или пароль',
+        },
+    },
 )
 async def login(
     data: AuthData,
