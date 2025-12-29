@@ -1,3 +1,4 @@
+# === Твой код ===
 from datetime import date, datetime
 from typing import Optional
 
@@ -14,11 +15,11 @@ class BookingBase(BaseModel):
 
     date: date = Field(
         ...,
-        description="Дата бронирования",
+        description='Дата бронирования',
     )
     note: Optional[str] = Field(
         None,
-        description="Примечание к бронированию",
+        description='Примечание к бронированию',
     )
 
 
@@ -27,14 +28,14 @@ class BookingCreate(BookingBase):
 
     table_id: int = Field(
         ...,
-        description="ID стола",
+        description='ID стола',
     )
     slot_id: int = Field(
         ...,
-        description="ID временного слота",
+        description='ID временного слота',
     )
 
-    @field_validator("date")
+    @field_validator('date')
     @classmethod
     def date_not_past(cls, value: date) -> date:
         """Дата бронирования не может быть в прошлом."""
@@ -46,10 +47,10 @@ class BookingCreate(BookingBase):
 class BookingUpdate(BookingBase):
     """Схема для частичного обновления бронирования."""
 
-    table_id: Optional[int] = Field(None, description="ID стола")
-    slot_id: Optional[int] = Field(None, description="ID временного слота")
+    table_id: Optional[int] = Field(None, description='ID стола')
+    slot_id: Optional[int] = Field(None, description='ID временного слота')
 
-    @field_validator("date")
+    @field_validator('date')
     @classmethod
     def date_not_past(cls, value: Optional[date]) -> Optional[date]:
         """Дата не может быть в прошлом (если передано)."""
@@ -66,7 +67,7 @@ class BookingRead(BookingBase):
     cafe: CafeRead
     table: TableRead
     slot: SlotRead
-    status: str = Field(..., description="Статус бронирования")
+    status: str = Field(..., description='Статус бронирования')
     created_at: datetime
     updated_at: datetime
     active: bool
@@ -75,3 +76,18 @@ class BookingRead(BookingBase):
         """Конфигурация Pydantic."""
 
         from_attributes = True
+
+
+# === Код из ветки develop ===
+# from app.crud.base import CRUDBase
+# from app.models import Booking
+# from app.schemas import BookingCreate, BookingUpdate
+
+
+# class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
+#     """CRUD для модели Booking."""
+
+#     pass
+
+
+# booking_crud = CRUDBooking(Booking)

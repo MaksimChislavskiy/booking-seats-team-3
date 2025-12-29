@@ -1,6 +1,6 @@
 import logging
+from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import AsyncGenerator
 
 from sqlalchemy import Boolean, DateTime, func, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -30,7 +30,7 @@ class Base(DeclarativeBase):
     - автоопределение имени таблицы
     - первичный ключ `id`
     - поля аудита (`created_at`, `updated_at`)
-    - флаг активности (`active`)
+    - флаг активности (`is_active`)
     """
 
     @declared_attr
@@ -55,7 +55,7 @@ class Base(DeclarativeBase):
         onupdate=func.now(),
         nullable=False,
     )
-    active: Mapped[bool] = mapped_column(
+    is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
         server_default=text('true'),
