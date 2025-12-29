@@ -12,13 +12,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import MAX_LENGTH_SLOT_DESCRIPTION
 from app.core.db import Base
-from app.models import AuditMixin
 
 if TYPE_CHECKING:
-    from app.models import Cafe
+    from app.models.cafe import Cafe
 
 
-class Slot(Base, AuditMixin):
+class Slot(Base):
     """Временной слот бронирования для кафе.
 
     Slot - это временной интервал,
@@ -43,12 +42,12 @@ class Slot(Base, AuditMixin):
         String(MAX_LENGTH_SLOT_DESCRIPTION),
         nullable=True,
     )
+
     cafe: Mapped['Cafe'] = relationship(
         'Cafe',
         back_populates='slots',
         lazy='selectin',
     )
-    # TODO: Добавить relationship с Booking после создания модели бронирования
 
     __table_args__ = (
         CheckConstraint(
