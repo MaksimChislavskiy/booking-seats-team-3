@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[3]
@@ -6,6 +7,7 @@ INFRA_DIR = BASE_DIR / 'infra'
 # --- Docker ---
 DEFAULT_LOCAL_HOST = 'localhost'
 ENV_RUN_IN_DOCKER = 'RUN_IN_DOCKER'
+TRUE_VALUE = 'yes'
 
 # --- Логирование ---
 LOGS_DIR = Path('logs')
@@ -17,13 +19,17 @@ LOG_BACKUP_COUNT = 10
 ROLE_ADMIN = 'admin'
 ROLE_MANAGER = 'manager'
 ROLE_USER = 'user'
-MAX_LENGTH_USER_USERNAME = 150
+MIN_LENGTH_USER_USERNAME = 3
+MAX_LENGTH_USER_USERNAME = 50
 MAX_LENGTH_USER_EMAIL = 255
 MAX_LENGTH_USER_PHONE = 50
 MAX_LENGTH_USER_PASSWORD_HASH = 255
 MAX_LENGTH_USER_TG_ID = 50
 MIN_LENGTH_USER_PASSWORD = 6
-PASSWORD_PATTERN = r'^[A-Za-z0-9_@#\$%!?\&\*]+$'
+MAX_LENGTH_USER_PASSWORD = 50
+PASSWORD_PATTERN = re.compile(r'^[A-Za-z0-9_@#\$%!?\&\*]+$')
+EMAIL_PATTERN = re.compile(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
+PHONE_PATTERN = re.compile(r'^(\+7|8)\d{10}$')
 
 # --- Slot ---
 MAX_LENGTH_SLOT_DESCRIPTION = 255
@@ -41,3 +47,6 @@ MAX_SEATS_NUMBER = 24
 # ---Media ---
 MAX_LENGTH_MEDIA_FILEPATH = 2048
 MEDIA_PATH_DISPLAY_LENGTH = 60
+
+# --- Booking ---
+MAX_LENGTH_BOOKING_NOTE = 255

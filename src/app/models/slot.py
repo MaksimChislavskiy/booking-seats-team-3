@@ -14,7 +14,7 @@ from app.core.constants import MAX_LENGTH_SLOT_DESCRIPTION
 from app.core.db import Base
 
 if TYPE_CHECKING:
-    from app.models import Cafe
+    from app.models.cafe import Cafe
 
 
 class Slot(Base):
@@ -42,6 +42,7 @@ class Slot(Base):
         String(MAX_LENGTH_SLOT_DESCRIPTION),
         nullable=True,
     )
+
     cafe: Mapped['Cafe'] = relationship(
         'Cafe',
         back_populates='slots',
