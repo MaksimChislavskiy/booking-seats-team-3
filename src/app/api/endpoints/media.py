@@ -6,6 +6,11 @@ from PIL import Image
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
+from app.core.responses import (
+    NOT_FOUND_RESPONSE,
+    VALIDATION_ERROR_RESPONSE,
+)
+
 from src.app.core.constants import MAX_IMAGE_SIZE, MEDIA_DIR_PATH
 from src.app.schemas.media import MediaUploadResponse
 
@@ -16,7 +21,7 @@ MEDIA_DIR.mkdir(exist_ok=True)
 
 
 @router.post(
-    '/upload',
+    '/',
     response_model=MediaUploadResponse,
     summary='Загрузка изображения',
     description=(
@@ -56,13 +61,17 @@ async def upload_image(file: UploadFile = File(...)) -> MediaUploadResponse:
 
 
 @router.get(
-    '/{image_id}',
+    '/{media_id}',
     summary='Получение изображения',
     description='Возвращает изображение по UUID',
+    responses={
+        **NOT_FOUND_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
+    },
 )
-async def get_image(image_id: str) -> FileResponse:
+async def get_image(media_id: str) -> FileResponse:
     """Отдача изображения по ID."""
-    file_path = MEDIA_DIR / f'{image_id}.jpg'
+    file_path = MEDIA_DIR / f'{media_id}.jpg'
     if not file_path.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
