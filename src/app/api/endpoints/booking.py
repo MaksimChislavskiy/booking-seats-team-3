@@ -23,11 +23,9 @@ async def create(
     current_user: User = Depends(get_current_user),
 ) -> BookingInfo:
     """Создаёт бронирование."""
-    return await booking_crud.create(
-        session,
-        booking_in,
-        user_id=current_user.id,
-    )
+    data = booking_in.model_dump()
+    data['user_id'] = current_user.id
+    return await booking_crud.create(data, session=session)
 
 
 @router.get(
@@ -41,10 +39,10 @@ async def read_my_list(
     current_user: User = Depends(get_current_user),
 ) -> list[BookingInfo]:
     """Список бронирований пользователя."""
-    return await booking_crud.get_multi(
-        session,
-        user_id=current_user.id,
-    )
+    filters = [
+        {"field": "user_id", "op": "eq", "value": current_user.id},
+    ]
+    return await booking_crud.get_multi(filters=filters, session=session)
 
 
 @router.get(
@@ -83,9 +81,15 @@ async def update(
     current_user: User = Depends(get_current_user),
 ) -> BookingInfo:
     """Обновляет бронирование (только владелец)."""
-    booking = await booking_crud.get(session, booking_id)
+    booking = await booking_crud.get_by_id(booking_id, session=session)
     if not booking:
         raise HTTPException(status_code=404, detail='Бронирование не найдено')
+
     if booking.user_id != current_user.id:
         raise HTTPException(status_code=403, detail='Доступ запрещён')
-    return await booking_crud.update(session, booking, booking_in)
+
+    return await booking_crud.update(
+        db_obj=booking,
+        obj_in=booking_in,
+        session=session,
+    )
