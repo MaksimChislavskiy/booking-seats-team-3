@@ -26,27 +26,33 @@ async def create(
 @router.get(
     '/',
     response_model=list[CafeInfo],
-    summary='Список кафе',
-    description='Возвращает список всех кафе.',
+    summary='Получение списка кафе',
 )
 async def read_list(
     session: AsyncSession = Depends(get_async_session),
 ) -> list[CafeInfo]:
-    """Возвращает список всех кафе."""
+    """Получение списка кафе.
+
+    Для администраторов и менеджеров - все кафе (с возможностью выбора),
+    для пользователей - только активные.
+    """
     return await cafe_crud.get_multi(session)
 
 
 @router.get(
     '/{cafe_id}',
     response_model=CafeInfo,
-    summary='Получение кафе по ID',
-    description='Возвращает информацию о конкретном кафе.',
+    summary='Получение информации о кафе по его ID',
 )
 async def read(
     cafe_id: int,
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
-    """Возвращает информацию о кафе."""
+    """Получение информации о кафе по его ID.
+
+    Для администраторов и менеджеров - все кафе,
+    для пользователей - только активные.
+    """
     cafe = await cafe_crud.get(session, cafe_id)
     if not cafe:
         raise HTTPException(status_code=404, detail='Кафе не найдено')
@@ -56,15 +62,17 @@ async def read(
 @router.patch(
     '/{cafe_id}',
     response_model=CafeInfo,
-    summary='Обновление кафе',
-    description='Частичное обновление данных кафе.',
+    summary='Обновление информации о кафе по его ID',
 )
 async def update(
     cafe_id: int,
     cafe_in: CafeUpdate,
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
-    """Обновляет данные кафе."""
+    """Обновление информации о кафе по его ID.
+
+    Только для администраторов и менеджеров.
+    """
     cafe = await cafe_crud.get(session, cafe_id)
     if not cafe:
         raise HTTPException(status_code=404, detail='Кафе не найдено')
