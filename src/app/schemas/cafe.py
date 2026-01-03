@@ -12,7 +12,7 @@ from app.core.constants import (
     MIN_LENGTH_CAFE_NAME,
     MIN_LENGTH_CAFE_PHONE,
 )
-from app.schemas import UserShortInfo
+from app.schemas.user import UserShortInfo
 
 
 class CafeBase(BaseModel):
