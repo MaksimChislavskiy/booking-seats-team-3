@@ -22,8 +22,9 @@ class Settings(BaseSettings):
     log_level: str = 'INFO'
     cors_origins: list[str] = []
 
-    secret: str
-    access_token_expire_seconds: int
+    secret_key: str
+    algorithm: str
+    access_token_expire_minutes: int
 
     postgres_user: str
     postgres_password: str
