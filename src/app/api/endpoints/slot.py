@@ -38,7 +38,7 @@ async def get_time_slots_list(
       - получают только активные слоты
       - параметр show_all игнорируется
     """
-    cafe = await cafe_crud.get(db, id=cafe_id)
+    cafe = await cafe_crud.get_by_id(db, id=cafe_id)
     if not cafe:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -78,7 +78,7 @@ async def create_time_slot_endpoint(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Недостаточно прав',
         )
-    cafe = await cafe_crud.get(db, id=cafe_id)
+    cafe = await cafe_crud.get_by_id(db, id=cafe_id)
     if not cafe:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -154,7 +154,7 @@ async def get_time_slot_by_id(
             detail='Временной слот не найден',
         )
     if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
-        cafe = await cafe_crud.get(db, id=cafe_id)
+        cafe = await cafe_crud.get_by_id(db, id=cafe_id)
         if not cafe or not cafe.is_active:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
