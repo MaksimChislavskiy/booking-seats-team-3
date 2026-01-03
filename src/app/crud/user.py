@@ -9,7 +9,7 @@ from app.models import User
 from app.schemas import UserCreate, UserUpdate
 
 
-class UserCRUD(CRUDBase[User, UserCreate, UserUpdate]):
+class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     """CRUD для работы с пользователями.
 
     Содержит методы выборки пользователей по уникальным полям
@@ -73,4 +73,4 @@ class UserCRUD(CRUDBase[User, UserCreate, UserUpdate]):
         return await self._get_by_field(User.tg_id, tg_id, session)
 
 
-user_crud = UserCRUD(User)
+user_crud = CRUDUser(User)
