@@ -34,3 +34,11 @@ VALIDATION_ERROR_RESPONSE = {
         'description': 'Ошибка валидации данных',
     },
 }
+
+
+BAD_REQUEST_RESPONSE = {
+    400: {
+        'model': ErrorResponse,
+        'description': 'Ошибка в параметрах запроса',
+    },
+}
