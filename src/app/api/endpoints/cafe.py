@@ -3,7 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
 from app.crud.cafe import cafe_crud
+from app.models.user import User
 from app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
+from app.services.auth import current_active_user, current_admin_or_manager
 
 router = APIRouter()
 
@@ -13,51 +15,93 @@ router = APIRouter()
     response_model=CafeInfo,
     status_code=status.HTTP_201_CREATED,
     summary='Создание нового кафе',
-    description='Создаёт новое кафе с указанными параметрами.',
+    description='Создаёт новое кафе. Только для администраторов и менеджеров.',
+    responses={
+        400: {'description': 'Неверные данные'},
+        401: {'description': 'Не авторизован'},
+        403: {'description': 'Недостаточно прав'},
+        422: {'description': 'Ошибка валидации'},
+    },
+    dependencies=[Depends(current_admin_or_manager)],
 )
 async def create(
     cafe_in: CafeCreate,
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Создаёт новое кафе."""
-    return await cafe_crud.create(session, cafe_in)
+    return await cafe_crud.create(cafe_in, session=session)
 
 
 @router.get(
     '/',
     response_model=list[CafeInfo],
-    summary='Список кафе',
-    description='Возвращает список всех кафе.',
+    summary='Получение списка кафе',
+    description=(
+        'Для авторизованных пользователей. '
+        'Для администраторов и менеджеров — все кафе, '
+        'для остальных — только активные.'
+    ),
 )
 async def read_list(
     session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_user),
 ) -> list[CafeInfo]:
-    """Возвращает список всех кафе."""
-    return await cafe_crud.get_multi(session)
+    """Возвращает список кафе."""
+    if current_user.role in ['admin', 'manager']:
+        return await cafe_crud.get_multi(session)
+    return await cafe_crud.get_multi(session, is_active=True)
 
 
 @router.get(
     '/{cafe_id}',
     response_model=CafeInfo,
-    summary='Получение кафе по ID',
-    description='Возвращает информацию о конкретном кафе.',
+    summary='Получение информации о кафе по ID',
+    description=(
+        'Для авторизованных пользователей. '
+        'Для администраторов и менеджеров — любое кафе, '
+        'для остальных — только активное.'
+    ),
+    responses={
+        404: {'description': 'Кафе не найдено'},
+        403: {'description': 'Доступ запрещён'},
+    },
 )
 async def read(
     cafe_id: int,
     session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_user),
 ) -> CafeInfo:
     """Возвращает информацию о кафе."""
-    cafe = await cafe_crud.get(session, cafe_id)
+    cafe = await cafe_crud.get_by_id(cafe_id, session=session)
     if not cafe:
-        raise HTTPException(status_code=404, detail='Кафе не найдено')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Кафе не найдено',
+        )
+    if current_user.role not in ['admin', 'manager'] and not cafe.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Доступ запрещён',
+        )
     return cafe
 
 
 @router.patch(
     '/{cafe_id}',
     response_model=CafeInfo,
-    summary='Обновление кафе',
-    description='Частичное обновление данных кафе.',
+    summary='Обновление информации о кафе по ID',
+    description=(
+        'Частичное обновление данных кафе. '
+        'Только для администраторов и менеджеров.'
+    ),
+    responses={
+        400: {'description': 'Неверные данные'},
+        401: {'description': 'Не авторизован'},
+        403: {'description': 'Недостаточно прав'},
+        404: {'description': 'Кафе не найдено'},
+        422: {'description': 'Ошибка валидации'},
+    },
+    dependencies=[Depends(current_admin_or_manager)],
 )
 async def update(
     cafe_id: int,
@@ -65,24 +109,10 @@ async def update(
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Обновляет данные кафе."""
-    cafe = await cafe_crud.get(session, cafe_id)
+    cafe = await cafe_crud.get_by_id(cafe_id, session=session)
     if not cafe:
-        raise HTTPException(status_code=404, detail='Кафе не найдено')
-    return await cafe_crud.update(session, cafe, cafe_in)
-
-
-@router.delete(
-    '/{cafe_id}',
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary='Удаление кафе',
-    description='Удаляет кафе и связанные данные (cascade).',
-)
-async def delete(
-    cafe_id: int,
-    session: AsyncSession = Depends(get_async_session),
-) -> None:
-    """Удаляет кафе."""
-    cafe = await cafe_crud.get(session, cafe_id)
-    if not cafe:
-        raise HTTPException(status_code=404, detail='Кафе не найдено')
-    await cafe_crud.delete(session, cafe)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Кафе не найдено',
+        )
+    return await cafe_crud.update(cafe, cafe_in, session=session)
