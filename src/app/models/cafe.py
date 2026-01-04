@@ -60,7 +60,6 @@ class Cafe(Base):
     )
     photo_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
-        ForeignKey('media.id', ondelete='RESTRICT'),
         nullable=True,
     )
 
