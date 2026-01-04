@@ -1,11 +1,12 @@
+import logging
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.logging import setup_logging
 from app.crud.cafe import cafe_crud
 from app.models.cafe import Cafe
 
-logger = setup_logging()
+logger = logging.getLogger(__name__)
 
 
 async def check_cafe_exists(
