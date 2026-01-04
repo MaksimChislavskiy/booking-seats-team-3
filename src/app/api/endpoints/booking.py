@@ -40,6 +40,7 @@ async def list_bookings(
     session: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(current_active_user),
 ) -> list[BookingInfo]:
+    """Возвращает список бронирований."""
     filters = []
 
     if current_user.role not in ['admin', 'manager']:
@@ -121,7 +122,10 @@ async def update(
             detail='Бронирование не найдено',
         )
 
-    if booking.user_id != current_user.id and current_user.role not in ['admin', 'manager']:
+    if booking.user_id != current_user.id and current_user.role not in [
+        'admin',
+        'manager',
+    ]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Доступ запрещён',
