@@ -6,6 +6,12 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
+from app.core.responses import (
+    FORBIDDEN_RESPONSE,
+    NOT_FOUND_RESPONSE,
+    VALIDATION_ERROR_RESPONSE,
+    UNAUTHORIZED_RESPONSE,
+)
 from app.crud.table import table_crud
 from app.models import Table, User, UserRole
 from app.schemas import TableCreate, TableInfo, TableUpdate
@@ -23,6 +29,12 @@ router = APIRouter()
     summary='Получение информации о столе в кафе по его ID.',
     description='Для администраторов и менеджеров - все столы, '
                 'для пользователей - только активные.',
+    responses={
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
+        **UNAUTHORIZED_RESPONSE,
+    },
 )
 async def get_table(
     cafe_id: int,
@@ -84,6 +96,12 @@ async def get_table(
     dependencies=[Depends(current_admin_or_manager)],
     summary='Обновление информации о столе в кафе по его ID.',
     description='Обновляет только переданные поля. Для ADMIN и MANAGER.',
+    responses={
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
+        **UNAUTHORIZED_RESPONSE,
+    },
 )
 async def update_table(
     cafe_id: int,
@@ -191,6 +209,12 @@ async def update_table(
     dependencies=[Depends(current_admin_or_manager)],
     summary='Создаёт новый стол в кафе с указанными параметрами.',
     description='Доступно только для ADMIN и MANAGER.',
+    responses={
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
+        **UNAUTHORIZED_RESPONSE,
+    },
 )
 async def create_table(
     cafe_id: int,
@@ -229,6 +253,11 @@ async def create_table(
     summary='Получение списка доступных для бронирования столов в кафе.',
     description='Для администраторов и менеджеров - все столы, '
                 'для пользователей - только активные.',
+    responses={
+        **NOT_FOUND_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
+        **UNAUTHORIZED_RESPONSE,
+    },
 )
 async def list_tables(
     cafe_id: int,
