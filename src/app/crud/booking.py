@@ -2,8 +2,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
-from app.models. import Booking
-from app.schemas. import BookingCreate, BookingUpdate
+from app.models import Booking
+from app.schemas import BookingCreate, BookingUpdate
 
 
 class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
