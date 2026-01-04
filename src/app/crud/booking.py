@@ -33,5 +33,4 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
         result = await session.execute(stmt)
         return result.scalars().all()
 
-
 booking_crud = CRUDBooking(Booking)
