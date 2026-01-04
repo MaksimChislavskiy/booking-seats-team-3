@@ -4,12 +4,15 @@ WORKDIR /app
 
 ENV RUN_IN_DOCKER=yes
 
-RUN pip install --upgrade pip
+RUN apk add --no-cache netcat-openbsd
 
 COPY requirements.txt .
 
-RUN pip install -r requirements.txt --no-cache-dir
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt --no-cache-dir
 
 COPY . .
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+RUN chmod +x entrypoint.sh
+
+ENTRYPOINT ["sh", "entrypoint.sh" ]
