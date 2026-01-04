@@ -68,7 +68,7 @@ class CRUDTable(CRUDBase[Table, TableCreate, TableUpdate]):
                 cafe_id, table_id,
                 extra={
                     'cafe_id': cafe_id,
-                    'table_id': table_id}
+                    'table_id': table_id},
             )
             query = query.where(Table.is_active)
         else:

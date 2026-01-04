@@ -6,10 +6,10 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
-from app.services.auth import current_admin_or_manager, current_active_user
 from app.crud.table import table_crud
 from app.models import Table, User, UserRole
 from app.schemas import TableCreate, TableInfo, TableUpdate
+from app.services.auth import current_active_user, current_admin_or_manager
 from app.validators.table import check_cafe_exists
 
 logger = logging.getLogger(__name__)
