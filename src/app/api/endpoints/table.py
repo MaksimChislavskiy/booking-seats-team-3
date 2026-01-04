@@ -9,8 +9,8 @@ from app.core.db import get_async_session
 from app.core.responses import (
     FORBIDDEN_RESPONSE,
     NOT_FOUND_RESPONSE,
-    VALIDATION_ERROR_RESPONSE,
     UNAUTHORIZED_RESPONSE,
+    VALIDATION_ERROR_RESPONSE,
 )
 from app.crud.table import table_crud
 from app.models import Table, User, UserRole
@@ -32,8 +32,8 @@ router = APIRouter()
     responses={
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
-        **VALIDATION_ERROR_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
     },
 )
 async def get_table(
@@ -99,8 +99,8 @@ async def get_table(
     responses={
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
-        **VALIDATION_ERROR_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
     },
 )
 async def update_table(
@@ -212,8 +212,8 @@ async def update_table(
     responses={
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
-        **VALIDATION_ERROR_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
     },
 )
 async def create_table(
@@ -255,8 +255,8 @@ async def create_table(
                 'для пользователей - только активные.',
     responses={
         **NOT_FOUND_RESPONSE,
-        **VALIDATION_ERROR_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
     },
 )
 async def list_tables(
