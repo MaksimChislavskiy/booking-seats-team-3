@@ -57,6 +57,7 @@ class Settings(BaseSettings):
 
     @property
     def redis_url(self) -> str:
+        """Формирует URL для подключения к Redis."""
         host = self.redis_host if IS_RUN_IN_DOCKER else DEFAULT_LOCAL_HOST
         return f'redis://{host}:{self.redis_port}/{self.redis_db}'
 

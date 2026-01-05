@@ -7,7 +7,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routers import main_router
-from app.core.redis import init_redis, close_redis
 from app.core.config import settings
 from app.core.error_handlers import (
     http_exception_handler,
@@ -19,6 +18,7 @@ from app.core.error_handlers import (
 from app.core.exceptions import UserAlreadyExistsError, UserNotFoundError
 from app.core.logging import setup_logging
 from app.core.openapi import OPENAPI_TAGS
+from app.core.redis import close_redis, init_redis
 from app.services.init_admin import create_admin_if_not_exists
 
 setup_logging()

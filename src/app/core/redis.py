@@ -6,12 +6,14 @@ redis: Redis | None = None
 
 
 async def get_redis() -> Redis:
+    """Возвращает инициализированный Redis-клиент."""
     if redis is None:
         raise RuntimeError('Redis is not initialized')
     return redis
 
 
 async def init_redis() -> None:
+    """Инициализирует подключение к Redis."""
     global redis
     redis = Redis(
         host=settings.redis_host,
@@ -22,5 +24,6 @@ async def init_redis() -> None:
 
 
 async def close_redis() -> None:
+    """Закрывает подключение к Redis."""
     if redis:
         await redis.close()
