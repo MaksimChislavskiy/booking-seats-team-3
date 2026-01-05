@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routers import main_router
+from app.core.redis import init_redis, close_redis
 from app.core.config import settings
 from app.core.error_handlers import (
     http_exception_handler,
@@ -29,8 +30,12 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Lifespan-обработчик запуска и остановки приложения."""
     logger.info('Cafe Booking API starting...')
+    await init_redis()
     await create_admin_if_not_exists()
+
     yield
+    await close_redis()
+
     logger.info('Cafe Booking API shutting down...')
 
 
@@ -40,6 +45,7 @@ app = FastAPI(
     lifespan=lifespan,
     openapi_tags=OPENAPI_TAGS,
 )
+
 
 app.include_router(main_router)
 

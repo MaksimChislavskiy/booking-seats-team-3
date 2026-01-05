@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     postgres_host: str
     postgres_port: int
 
+    # Redis
+    redis_host: str = 'redis'
+    redis_port: int = 6379
+    redis_db: int = 0
+
     model_config = SettingsConfigDict(
         env_file=None if IS_RUN_IN_DOCKER else INFRA_DIR / '.env',
         env_file_encoding='utf-8',
@@ -49,6 +54,11 @@ class Settings(BaseSettings):
             f'{self.postgres_password}@{host}:'
             f'{self.postgres_port}/{self.postgres_db}'
         )
+
+    @property
+    def redis_url(self) -> str:
+        host = self.redis_host if IS_RUN_IN_DOCKER else DEFAULT_LOCAL_HOST
+        return f'redis://{host}:{self.redis_port}/{self.redis_db}'
 
 
 settings = Settings()
