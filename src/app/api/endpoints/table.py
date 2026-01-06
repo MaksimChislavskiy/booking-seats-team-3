@@ -119,9 +119,11 @@ async def update_table(
             'update_data': update_data.model_dump(),
         },
     )
+
     cafe = await check_cafe_exists(cafe_id, session)
     logger.debug(
         'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
+
     table = await table_crud.get_by_cafe_and_id(
         session=session,
         cafe_id=cafe.id,
@@ -137,6 +139,7 @@ async def update_table(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f'Стол {table_id} не найден.',
         )
+
     try:
         updated_table = await table_crud.update(
             db_obj=table,
@@ -148,6 +151,8 @@ async def update_table(
             cafe_id, table_id,
             extra={'cafe_id': cafe_id, 'table_id': table_id},
         )
+        return updated_table
+
     except ValidationError as e:
         logger.error(
             'Ошибка валидации данных. cafe_id=%d, table_id=%d, ошибка=%s',
@@ -159,7 +164,7 @@ async def update_table(
         )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Некорректные данные. Проверьте поля.",
+            detail='Некорректные данные. Проверьте поля.',
         )
     except IntegrityError as e:
         logger.error(
@@ -172,7 +177,7 @@ async def update_table(
         )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Конфликт данных. Проверьте входные параметры.",
+            detail='Конфликт данных. Проверьте входные параметры.',
         )
     except OperationalError as e:
         logger.error(
@@ -185,7 +190,7 @@ async def update_table(
         )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Временная ошибка сервиса. Попробуйте позже.",
+            detail='Временная ошибка сервиса. Попробуйте позже.',
         )
     except Exception as e:  # Крайний случай — неизвестные ошибки.
         logger.exception(
@@ -198,9 +203,8 @@ async def update_table(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Внутренняя ошибка сервера.",
+            detail='Внутренняя ошибка сервера.',
         )
-    return updated_table
 
 
 @router.post(
@@ -316,3 +320,94 @@ async def list_tables(
         },
     )
     return tables
+
+
+@router.delete(
+    '/{table_id}',
+    response_model=TableInfo,
+    dependencies=[Depends(current_admin_or_manager)],
+    summary='Мягкое удаление стола (деактивация), для ADMIN и MANAGER.',
+    description='Деактивирует стол, устанавливая is_active=False.',
+    responses={
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **UNAUTHORIZED_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
+    },
+)
+async def delete_table(
+    cafe_id: int,
+    table_id: int,
+    session: AsyncSession = Depends(get_async_session),
+) -> Table:
+    """Мягкое удаление стола (для администраторов и менеджеров)."""
+    logger.info(
+        'Деактивация стола. cafe_id=%d, table_id=%d',
+        cafe_id, table_id,
+        extra={
+            'cafe_id': cafe_id,
+            'table_id': table_id,
+        },
+    )
+
+    cafe = await check_cafe_exists(cafe_id, session)
+    logger.debug(
+        'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id}
+    )
+
+    table = await table_crud.get_by_cafe_and_id(
+        session=session,
+        cafe_id=cafe.id,
+        table_id=table_id,
+    )
+    if not table:
+        logger.warning(
+            'Стол не найден при деактивации. cafe_id=%d, table_id=%d',
+            cafe_id, table_id,
+            extra={'cafe_id': cafe_id, 'table_id': table_id},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f'Стол {table_id} не найден.',
+        )
+
+    try:
+        deactivated_table = await table_crud.soft_delete(
+            db_obj=table,
+            session=session,
+        )
+        logger.info(
+            'Стол деактивирован. cafe_id=%d, table_id=%d',
+            cafe_id, table_id,
+            extra={'cafe_id': cafe_id, 'table_id': table_id},
+        )
+        return deactivated_table
+
+    except OperationalError as e:
+        logger.error(
+            'Операционная ошибка БД. cafe_id=%d, table_id=%d, ошибка=%s',
+            cafe_id, table_id, str(e),
+            extra={
+                'cafe_id': cafe_id,
+                'table_id': table_id,
+                'error': repr(e),
+            },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail='Временная ошибка сервиса. Попробуйте позже.',
+        )
+    except Exception as e:  # Крайний случай — неизвестные ошибки
+        logger.exception(
+            'Неожиданная ошибка деактивации стола. cafe_id=%d, table_id=%d',
+            cafe_id, table_id,
+            extra={
+                'cafe_id': cafe_id,
+                'table_id': table_id,
+                'error': repr(e),
+            },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='Внутренняя ошибка сервера.',
+        )
