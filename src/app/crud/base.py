@@ -213,12 +213,23 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> ModelType:
         """Выполняет мягкое удаление объекта.
 
-        Метод не удаляет запись физически из базы данных.
-        Вместо этого объект помечается как неактивный путём установки
-        флага `is_active = False`.
+        Метод:
+        - не удаляет запись физически из базы данных;
+        - помечает объект как неактивный (`is_active = False`);
+        - сохраняет изменения в базе данных;
+        - обновляет объект из базы данных перед возвратом.
+
+        Args:
+            db_obj: ORM-объект для деактивации.
+            session: Асинхронная сессия SQLAlchemy.
+
+        Returns:
+            Обновлённый объект.
+
         """
         db_obj.is_active = False
         await session.commit()
+        await session.refresh(db_obj)
         return db_obj
 
     def _extract_data(
