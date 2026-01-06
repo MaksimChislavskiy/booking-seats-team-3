@@ -1,6 +1,8 @@
 from app.schemas.error import ErrorResponse
 
-# FIXME: Здесь только общие
+OK = {
+    200: {'description': 'Успешно'},
+}
 
 CREATED = {
     201: {'description': 'Успешно'},
@@ -37,7 +39,7 @@ NOT_FOUND_RESPONSE = {
 CONFLICT_RESPONSE = {
     409: {
         'model': ErrorResponse,
-        'description': 'Пользователь с такими данными уже существует',
+        'description': 'Возникли конфликты',
     },
 }
 

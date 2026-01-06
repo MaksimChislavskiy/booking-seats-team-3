@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
 from app.core.exceptions import UserNotFoundError
 from app.core.responses import (
-    CONFLICT_RESPONSE,
     FORBIDDEN_RESPONSE,
     NOT_FOUND_RESPONSE,
     UNAUTHORIZED_RESPONSE,
+    USER_CONFLICT_RESPONSE,
     VALIDATION_ERROR_RESPONSE,
 )
 from app.crud.user import user_crud
@@ -50,7 +50,7 @@ async def get_users(
     summary='Регистрация нового пользователя',
     description='Создает нового пользователя с указанными данными.',
     responses={
-        **CONFLICT_RESPONSE,
+        **USER_CONFLICT_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
 )
@@ -95,7 +95,7 @@ async def get_me(
     response_model=UserInfo,
     summary='Обновление информации о текущем пользователе',
     responses={
-        **CONFLICT_RESPONSE,
+        **USER_CONFLICT_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
@@ -148,7 +148,7 @@ async def get_user_by_id(
     summary='Обновление пользователя по ID',
     dependencies=[Depends(current_admin_or_manager)],
     responses={
-        **CONFLICT_RESPONSE,
+        **USER_CONFLICT_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
