@@ -352,7 +352,7 @@ async def delete_table(
 
     cafe = await check_cafe_exists(cafe_id, session)
     logger.debug(
-        'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id}
+        'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id},
     )
 
     table = await table_crud.get_by_cafe_and_id(
