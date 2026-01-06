@@ -18,8 +18,7 @@ from app.core.error_handlers import (
 from app.core.exceptions import UserAlreadyExistsError, UserNotFoundError
 from app.core.logging import setup_logging
 from app.core.openapi import OPENAPI_TAGS
-from app.core.redis import close_redis, init_redis
-from app.services.init_admin import create_admin_if_not_exists
+from app.core.redis import redis_manager
 
 setup_logging()
 
@@ -28,15 +27,9 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Lifespan-обработчик запуска и остановки приложения."""
-    logger.info('Cafe Booking API starting...')
-    await init_redis()
-    await create_admin_if_not_exists()
-
+    await redis_manager.connect()
     yield
-    await close_redis()
-
-    logger.info('Cafe Booking API shutting down...')
+    await redis_manager.close()
 
 
 app = FastAPI(
