@@ -22,6 +22,7 @@ from app.services.user import user_service
 router = APIRouter()
 
 
+# FIXME: Сделать рефакторинг
 @router.get(
     '/',
     response_model=list[UserInfo],
