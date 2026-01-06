@@ -1,18 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Path, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
 from app.core.responses import (
     BAD_REQUEST,
+    CONFLICT_RESPONSE,
     CREATED,
     FORBIDDEN_RESPONSE,
     NOT_FOUND_RESPONSE,
+    OK,
     UNAUTHORIZED_RESPONSE,
     VALIDATION_ERROR_RESPONSE,
 )
-from app.crud import cafe_crud
 from app.models import User
-from app.models.enum import UserRole
 from app.schemas import CafeCreate, CafeInfo, CafeUpdate
 from app.services.auth import (
     current_active_user,
@@ -20,7 +20,6 @@ from app.services.auth import (
     current_admin_or_manager,
 )
 from app.services.cafe import cafe_service
-from app.services.permissions import can_manage_cafe
 
 router = APIRouter()
 
@@ -36,7 +35,7 @@ router = APIRouter()
         '- Пользователь видит только активные кафе.'
     ),
     responses={
-        **CREATED,
+        **OK,
         **UNAUTHORIZED_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
@@ -72,7 +71,10 @@ async def read_list(
     response_model=CafeInfo,
     status_code=status.HTTP_201_CREATED,
     summary='Создание нового кафе',
-    description='Создаёт новое кафе. Только для администраторов и менеджеров.',
+    description=(
+        'Создаёт новое кафе и назначает менеджеров.\n\n'
+        'Доступно только администраторам.'
+    ),
     responses={
         **CREATED,
         **BAD_REQUEST,
@@ -84,10 +86,32 @@ async def read_list(
 )
 async def create(
     cafe_in: CafeCreate,
+    user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
-    """Создаёт новое кафе."""  # FIXME: Улучшить.
-    return await cafe_service.create_cafe(cafe_in, session)
+    """Создаёт новое кафе и назначает менеджеров.
+
+    Метод:
+    - создаёт новое кафе;
+    - проверяет уникальность кафе по (name, address);
+    - назначает указанных менеджеров кафе.
+
+    Args:
+        cafe_in: Данные для создания кафе.
+        user: Текущий аутентифицированный пользователь.
+        session: Асинхронная сессия SQLAlchemy.
+
+    Returns:
+        Созданный объект Cafe.
+
+    Raises:
+        HTTPException:
+            - 400: если входные данные невалидны;
+            - 403: если пользователь не является администратором;
+            - 409: если кафе с таким названием и адресом уже существует.
+
+    """
+    return await cafe_service.create_cafe(cafe_in, user, session)
 
 
 @router.get(
@@ -101,15 +125,16 @@ async def create(
         '- Пользователь может получить только активное кафе.'
     ),
     responses={
-        **CREATED,
+        **OK,
         **BAD_REQUEST,
+        **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
 )
 async def read_cafe(
-    cafe_id: int,
+    cafe_id: int = Path(..., description='ID кафе'),
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
@@ -132,11 +157,14 @@ async def read_cafe(
     response_model=CafeInfo,
     summary='Обновление информации о кафе по ID',
     description=(
-        'Частичное обновление данных кафе. '
-        'Только для администраторов и менеджеров.'
-    ),  # FIXME: Обновить описание
+        'Частичное обновление информации о кафе.\n\n'
+        'Правила доступа:\n'
+        '- Администратор может обновлять любое кафе.\n'
+        '- Менеджер может обновлять только кафе, к которому он привязан.\n'
+        '- Обычный пользователь не имеет доступа.\n\n'
+    ),
     responses={
-        **CREATED,
+        **OK,
         **BAD_REQUEST,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
@@ -146,12 +174,74 @@ async def read_cafe(
     dependencies=[Depends(current_admin_or_manager)],
 )
 async def update(
-    cafe_id: int,
+    cafe_id: int = Path(..., description='ID кафе'),
+    *,
     cafe_in: CafeUpdate,
+    user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
-    """Обновляет данные кафе."""
-    return await cafe_service.update_cafe(cafe_id, cafe_in, session)
+    """Частично обновляет информацию о кафе по его ID.
+
+    Endpoint выполняет только базовую проверку роли пользователя:
+    доступ к данному endpoint имеют только администраторы и менеджеры.
+    Проверка того, имеет ли менеджер право обновлять конкретное кафе,
+    выполняется в сервисном слое.
+
+    Args:
+        cafe_id: Идентификатор кафе для обновления.
+        cafe_in: Данные для обновления кафе.
+        user: Текущий аутентифицированный пользователь
+                            (администратор или менеджер).
+        session: Асинхронная сессия SQLAlchemy.
+
+    Returns:
+        Объект Cafe с обновлёнными данными.
+
+    Raises:
+        HTTPException:
+            - 401: если пользователь не аутентифицирован;
+            - 403: если у пользователя нет доступа;
+            - 404: если кафе не найдено.
+
+    """
+    return await cafe_service.update_cafe(cafe_id, cafe_in, user, session)
 
 
-# TODO: Добавить soft-delete
+@router.delete(
+    '/{cafe_id}',
+    response_model=CafeInfo,
+    summary='Деактивировать кафе по ID',
+    description=(
+        'Деактивирует кафе путем установки атрибута `is_active=False`. '
+        'Доступно только администраторам.'
+    ),
+    responses={
+        **OK,
+        **UNAUTHORIZED_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **CONFLICT_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
+    },
+    dependencies=[Depends(current_admin)],
+)
+async def deactivate_cafe(
+    cafe_id: int = Path(..., description='ID кафе'),
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> CafeInfo:
+    """Деактивирует кафе по ID.
+
+    Args:
+        cafe_id: Идентификатор кафе для деактивации.
+        user: Текущий аутентифицированный пользователь.
+        session: Асинхронная сессия SQLAlchemy.
+
+    Returns:
+        Объект с обновленной информацией о кафе.
+
+    Raises:
+        HTTPException: Если кафе не найдено или уже деактивировано.
+
+    """
+    return await cafe_service.deactivate_cafe(cafe_id, user, session)
