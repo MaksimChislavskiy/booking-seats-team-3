@@ -1,13 +1,70 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
-from app.crud.cafe import cafe_crud
-from app.models.user import User
-from app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
-from app.services.auth import current_active_user, current_admin_or_manager
+from app.core.responses import (
+    BAD_REQUEST,
+    CREATED,
+    FORBIDDEN_RESPONSE,
+    NOT_FOUND_RESPONSE,
+    UNAUTHORIZED_RESPONSE,
+    VALIDATION_ERROR_RESPONSE,
+)
+from app.crud import cafe_crud
+from app.models import User
+from app.models.enum import UserRole
+from app.schemas import CafeCreate, CafeInfo, CafeUpdate
+from app.services.auth import (
+    current_active_user,
+    current_admin,
+    current_admin_or_manager,
+)
+from app.services.cafe import cafe_service
+from app.services.permissions import can_manage_cafe
 
 router = APIRouter()
+
+
+@router.get(
+    '/',
+    response_model=list[CafeInfo],
+    summary='Получение списка кафе',
+    description=(
+        'Возвращает список кафе с учётом роли пользователя:\n'
+        '- Администратор может получать все кафе (включая неактивные).\n'
+        '- Менеджер видит все активные кафе и своё кафе.\n'
+        '- Пользователь видит только активные кафе.'
+    ),
+    responses={
+        **CREATED,
+        **UNAUTHORIZED_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
+    },
+)
+async def read_list(
+    user: User = Depends(current_active_user),
+    show_all: bool = Query(
+        False,
+        description=(
+            'Показывать все кафе или нет. '
+            'По умолчанию показывает только активные кафе'
+        ),
+    ),
+    session: AsyncSession = Depends(get_async_session),
+) -> list[CafeInfo]:
+    """Возвращает список кафе, доступных текущему пользователю.
+
+    Args:
+        show_all: Флаг отображения неактивных кафе
+            (работает только для администраторов).
+        user: Текущий аутентифицированный пользователь.
+        session: Асинхронная сессия SQLAlchemy.
+
+    Returns:
+        Список объектов CafeInfo.
+
+    """
+    return await cafe_service.get_cafes_for_user(user, show_all, session)
 
 
 @router.post(
@@ -17,56 +74,20 @@ router = APIRouter()
     summary='Создание нового кафе',
     description='Создаёт новое кафе. Только для администраторов и менеджеров.',
     responses={
-        400: {'description': 'Неверные данные или кафе уже существует'},
-        401: {'description': 'Не авторизован'},
-        403: {'description': 'Недостаточно прав'},
-        422: {'description': 'Ошибка валидации'},
+        **CREATED,
+        **BAD_REQUEST,
+        **UNAUTHORIZED_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
     },
-    dependencies=[Depends(current_admin_or_manager)],
+    dependencies=[Depends(current_admin)],
 )
 async def create(
     cafe_in: CafeCreate,
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
-    """Создаёт новое кафе."""
-    # Проверка уникальности name + address
-    existing = await cafe_crud.get_multi(
-        session,
-        filters=[
-            {"field": "name", "op": "eq", "value": cafe_in.name},
-            {"field": "address", "op": "eq", "value": cafe_in.address},
-        ],
-    )
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Кафе с таким названием и адресом уже существует',
-        )
-    return await cafe_crud.create(cafe_in, session=session)
-
-
-@router.get(
-    '/',
-    response_model=list[CafeInfo],
-    summary='Получение списка кафе',
-    description=(
-        'Для авторизованных пользователей. '
-        'Для администраторов и менеджеров — все кафе, '
-        'для остальных — только активные.'
-    ),
-    responses={
-        401: {'description': 'Не авторизован'},
-        422: {'description': 'Ошибка валидации'},
-    },
-)
-async def read_list(
-    session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(current_active_user),
-) -> list[CafeInfo]:
-    """Возвращает список кафе."""
-    if current_user.role in ['admin', 'manager']:
-        return await cafe_crud.get_multi(session)
-    return await cafe_crud.get_multi(session, is_active=True)
+    """Создаёт новое кафе."""  # FIXME: Улучшить.
+    return await cafe_service.create_cafe(cafe_in, session)
 
 
 @router.get(
@@ -74,35 +95,36 @@ async def read_list(
     response_model=CafeInfo,
     summary='Получение информации о кафе по ID',
     description=(
-        'Для авторизованных пользователей. '
-        'Для администраторов и менеджеров — любое кафе, '
-        'для остальных — только активное.'
+        'Возвращает кафе по идентификатору с учётом роли пользователя:\n'
+        '- Администратор может получить любое кафе (включая неактивное).\n'
+        '- Менеджер может получить активное кафе и своё кафе.\n'
+        '- Пользователь может получить только активное кафе.'
     ),
     responses={
-        401: {'description': 'Не авторизован'},
-        403: {'description': 'Доступ запрещён'},
-        404: {'description': 'Кафе не найдено'},
-        422: {'description': 'Ошибка валидации'},
+        **CREATED,
+        **BAD_REQUEST,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
     },
 )
-async def read(
+async def read_cafe(
     cafe_id: int,
+    user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(current_active_user),
 ) -> CafeInfo:
-    """Возвращает информацию о кафе."""
-    cafe = await cafe_crud.get_by_id(cafe_id, session=session)
-    if not cafe:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='Кафе не найдено',
-        )
-    if current_user.role not in ['admin', 'manager'] and not cafe.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail='Доступ запрещён',
-        )
-    return cafe
+    """Возвращает кафе по ID, если пользователь имеет доступ.
+
+    Args:
+        cafe_id: Идентификатор кафе.
+        user: Текущий аутентифицированный пользователь.
+        session: Асинхронная сессия SQLAlchemy.
+
+    Returns:
+        Объект CafeInfo.
+
+    """
+    return await cafe_service.get_cafe_by_id_for_user(cafe_id, user, session)
 
 
 @router.patch(
@@ -112,13 +134,14 @@ async def read(
     description=(
         'Частичное обновление данных кафе. '
         'Только для администраторов и менеджеров.'
-    ),
+    ),  # FIXME: Обновить описание
     responses={
-        400: {'description': 'Неверные данные'},
-        401: {'description': 'Не авторизован'},
-        403: {'description': 'Недостаточно прав'},
-        404: {'description': 'Кафе не найдено'},
-        422: {'description': 'Ошибка валидации'},
+        **CREATED,
+        **BAD_REQUEST,
+        **UNAUTHORIZED_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
     },
     dependencies=[Depends(current_admin_or_manager)],
 )
@@ -128,10 +151,7 @@ async def update(
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Обновляет данные кафе."""
-    cafe = await cafe_crud.get_by_id(cafe_id, session=session)
-    if not cafe:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='Кафе не найдено',
-        )
-    return await cafe_crud.update(cafe, cafe_in, session=session)
+    return await cafe_service.update_cafe(cafe_id, cafe_in, session)
+
+
+# TODO: Добавить soft-delete
