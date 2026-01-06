@@ -188,7 +188,9 @@ class SlotService:
                 start_time=start_time,
                 end_time=end_time,
             )
-            overlapping_slots = [s for s in overlapping_slots if s.id != slot_id]
+            overlapping_slots = [
+                s for s in overlapping_slots if s.id != slot_id
+            ]
             if overlapping_slots:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
