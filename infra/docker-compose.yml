@@ -29,6 +29,14 @@ services:
       timeout: 10s
       retries: 5
     restart: unless-stopped
+
+  redis:
+    container_name: cafe-redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   backend:
     container_name: cafe-back
     build:
@@ -38,7 +46,23 @@ services:
       - .env
     depends_on:
       - db
+      - redis
     restart: unless-stopped
+
+  celery:
+    container_name: cafe-celery
+    build:
+      context: ../src
+      dockerfile: Dockerfile
+    entrypoint: ""
+    command: celery -A app.core.celery_app.celery_app worker -l info
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+    restart: unless-stopped
+
   gateway:
     image: nginx:1.25-alpine
     volumes:
