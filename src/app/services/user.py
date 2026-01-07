@@ -28,19 +28,27 @@ class UserService:
         *,
         user_in: UserCreate,
         session: AsyncSession,
+        role: UserRole = UserRole.USER,
     ) -> User:
         """Создание пользователя.
 
+        Метод инкапсулирует всю бизнес-логику создания пользователя и является
+        единой точкой входа для:
+        - API (создание обычных пользователей)
+        - системного кода (создание администратора при старте приложения)
+
         Выполняет следующие действия:
-        - проверяет наличие обязательных данных
-        - проверяет уникальность username, email, phone и tg_id
-        - хэширует пароль
-        - назначает роль пользователя по умолчанию
-        - делегирует сохранение в CRUD
+        - проверяет наличие обязательных контактных данных (email или phone).
+        - проверяет уникальность username, email, phone и tg_id.
+        - хэширует пароль.
+        - назначает роль пользователя.
+        - делегирует сохранение в CRUD.
 
         Args:
             user_in: Данные для создания пользователя.
             session: Асинхронная сессия базы данных.
+            role: Роль пользователя. По умолчанию — `UserRole.USER`.
+                Используется системным кодом для создания администраторов.
 
         Returns:
             Созданный пользователь.
@@ -52,13 +60,14 @@ class UserService:
 
         """
         logger.info(
-            'Попытка создания пользователя: username=%s',
+            'Попытка создания пользователя: username=%s, role=%s',
             user_in.username,
+            role,
         )
         self._validate_required_contacts(user_in)
         await self._check_user_uniqueness(user_in, session)
 
-        user_data = self._prepare_create_data(user_in)
+        user_data = self._prepare_create_data(user_in, role)
 
         user = await user_crud.create(
             obj_in=user_data,
@@ -66,9 +75,10 @@ class UserService:
         )
 
         logger.info(
-            'Пользователь успешно создан: user_id=%s, username=%s',
+            'Пользователь успешно создан: user_id=%s, username=%s, role=%s',
             user.id,
             user.username,
+            role,
         )
 
         return user
@@ -92,6 +102,7 @@ class UserService:
             user_id: ID пользователя.
             user_in: Данные для обновления пользователя.
             session: Асинхронная сессия базы данных.
+
 
         Returns:
             Обновлённый пользователь.
@@ -226,23 +237,28 @@ class UserService:
                 )
                 raise UserAlreadyExistsError(msg)
 
-    def _prepare_create_data(self, user_in: UserCreate) -> dict:
+    def _prepare_create_data(
+        self,
+        user_in: UserCreate,
+        role: UserRole,
+    ) -> dict:
         """Подготавливает данные для создания пользователя.
 
-        - удаляет пароль из входных данных
+        - исключает пароль из входных данных
         - хэширует пароль
-        - устанавливает роль пользователя по умолчанию
+        - устанавливает роль пользователя
 
         Args:
-            user_in: Данные пользователя.
+            user_in: Данные пользователя из схемы `UserCreate`.
+            role: Роль пользователя, назначаемая при создании.
 
         Returns:
-            Словарь данных.
+            Словарь с подготовленными данными.
 
         """
         data = user_in.model_dump(exclude={'password'})
         data['password_hash'] = get_password_hash(user_in.password)
-        data['role'] = UserRole.USER
+        data['role'] = role
         return data
 
     def _prepare_update_data(self, user_in: UserUpdate) -> dict:

@@ -14,8 +14,8 @@ UpdateSchemaType = TypeVar('UpdateSchemaType', bound=BaseModel)
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     """Базовый класс для CRUD операций.
 
-    Предоставляет общие методы для работы с моделями базы данных,
-    включая получение, создание, обновление и мягкое удаление объектов.
+    Содержит универсальные методы работы с SQLAlchemy-моделями:
+    получение, создание, обновление и мягкое удаление объектов.
 
     Attributes:
         model: Класс модели SQLAlchemy.
@@ -23,7 +23,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     """
 
     def __init__(self, model: Type[ModelType]) -> None:
-        """Инициализация CRUD класса для конкретной модели."""
+        """Создаёт CRUD-объект для указанной SQLAlchemy-модели."""
         self.model = model
 
     async def get_by_id(
@@ -31,7 +31,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj_id: int,
         session: AsyncSession,
     ) -> ModelType | None:
-        """Возвращает объект модели по его ID.
+        """Возвращает объект модели по идентификатору.
 
         Args:
             obj_id: Идентификатор объекта.
@@ -52,6 +52,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         session: AsyncSession,
     ) -> list[ModelType]:
         """Возвращает список объектов модели с поддержкой AND / OR фильтрации.
+
+        Метод принимает декларативное описание фильтров
+        и преобразует его в SQLAlchemy-условия.
 
         Поддерживаемые форматы фильтров:
 
@@ -117,14 +120,21 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> ModelType:
         """Создает новый объект модели в базе данных.
 
-        Создает новый объект на основе схемы Pydantic,
-        фильтрует поля по модели SQLAlchemy, добавляет связанные объекты
-        если указано, и сохраняет в базу данных.
+        Принимает данные для создания в виде Pydantic-схемы или словаря.
+        Это позволяет добавлять в данные дополнительные поля вне RequestBody
+        (например, из path-параметров или контекста запроса).
+
+        Метод:
+        - приводит входные данные к dict,
+        - фильтрует поля по атрибутам SQLAlchemy-модели,
+        - создает экземпляр модели,
+        - опционально добавляет связанные объекты,
+        - сохраняет объект в базе данных.
 
         Args:
-            obj_in: Pydantic-схема с данными для создания.
+            obj_in: Pydantic-схема или словарь с данными для создания объекта.
             related: опциональные связи many-to-many в формате
-                {<relationship_name>: [ORM объекты]}.
+                {relationship_name: [ORM объекты]}.
             session: асинхронная SQLAlchemy-сессия.
 
         Returns:
@@ -160,14 +170,19 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> ModelType:
         """Обновляет существующий объект модели в базе данных.
 
-        Обновляет только те поля, которые были переданы в Update-схеме.
-        Поддерживает обновление связей many-to-many через related.
+        Принимает обновляемые данные в виде Pydantic-схемы
+        или словаря. Обновляются только те поля, которые:
+        - присутствуют во входных данных,
+        - существуют в модели SQLAlchemy,
+        - имеют значение, отличное от None.
+
+        Поддерживает обновление связей many-to-many через параметр related.
 
         Args:
-            db_obj: объект, который нужно обновить.
-            obj_in: Pydantic-схема с обновляемыми данными.
+            db_obj: Экземпляр модели, который требуется обновить.
+            obj_in: Pydantic-схема или словарь с обновляемыми данными.
             related: опциональные связи many-to-many в формате
-                {<relationship_name>: [ORM объекты]}.
+                {relationship_name: [ORM объекты]}.
             session: асинхронная SQLAlchemy-сессия.
 
         Returns:
@@ -198,19 +213,30 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> ModelType:
         """Выполняет мягкое удаление объекта.
 
-        Метод не удаляет запись физически из базы данных.
-        Вместо этого объект помечается как неактивный путём установки
-        флага `is_active = False`.
+        Метод:
+        - не удаляет запись физически из базы данных;
+        - помечает объект как неактивный (`is_active = False`);
+        - сохраняет изменения в базе данных;
+        - обновляет объект из базы данных перед возвратом.
+
+        Args:
+            db_obj: ORM-объект для деактивации.
+            session: Асинхронная сессия SQLAlchemy.
+
+        Returns:
+            Обновлённый объект.
+
         """
         db_obj.is_active = False
         await session.commit()
+        await session.refresh(db_obj)
         return db_obj
 
     def _extract_data(
         self,
         obj_in: BaseModel | dict[str, Any],
     ) -> dict[str, Any]:
-        """Приводит входные данные к dict."""
+        """Преобразует входные данные (схему или словарь) в dict."""
         if isinstance(obj_in, BaseModel):
             return obj_in.model_dump(exclude_unset=True)
         if isinstance(obj_in, dict):
@@ -218,7 +244,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         raise TypeError('obj_in должен быть схемой от BaseModel или dict')
 
     def _get_model_fields(self) -> set[str]:
-        """Возвращает имена всех полей модели."""
+        """Возвращает имена всех полей SQLAlchemy-модели."""
         return set(self.model.__mapper__.columns.keys())
 
     def _apply_relationships(
@@ -234,8 +260,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         Args:
             db_obj: экземпляр модели, к которому добавляются связи.
             related: опциональные связи many-to-many в формате
-                {<relationship_name>: [ORM объекты]}.
-            session: асинхронная SQLAlchemy-сессия.
+                {relationship_name: [ORM объекты]}.
 
         Raises:
             ValueError: Если указано несуществующее поле связи.
@@ -256,7 +281,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> ColumnElement[bool]:
         """Преобразует описание фильтра в SQLAlchemy-условие.
 
-        Проверяет, что поле существует в модели и валидирует операцию.
+        Проверяет, что поле существует в модели и что операция поддерживается.
 
         Формат condition:
             {
