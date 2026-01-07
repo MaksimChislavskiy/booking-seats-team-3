@@ -8,15 +8,13 @@ def schedule_booking_reminder(
     booking_id: int,
     remind_at: datetime,
 ) -> str:
-    """
-    Планирует напоминание о бронировании.
+    """Планирует напоминание о бронировании.
 
     Используется при:
     - создании бронирования
 
     Возвращает task_id Celery — его нужно сохранить в БД.
     """
-
     now = datetime.now(timezone.utc)
 
     if remind_at.tzinfo is None:
@@ -34,13 +32,11 @@ def schedule_booking_reminder(
 
 
 def cancel_booking_reminder(task_id: str) -> None:
-    """
-    Отменяет ранее запланированное напоминание.
+    """Отменяет ранее запланированное напоминание.
 
     Используется при:
     - отмене бронирования
     """
-
     celery_app.control.revoke(task_id, terminate=True)
 
 
@@ -49,12 +45,10 @@ def reschedule_booking_reminder(
     booking_id: int,
     new_remind_at: datetime,
 ) -> str:
-    """
-    Пересоздаёт напоминание при изменении времени бронирования.
+    """Пересоздаёт напоминание при изменении времени бронирования.
 
     Используется при:
     - обновлении бронирования
     """
-
     cancel_booking_reminder(old_task_id)
     return schedule_booking_reminder(booking_id, new_remind_at)

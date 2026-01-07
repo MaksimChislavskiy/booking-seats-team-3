@@ -18,7 +18,6 @@ from app.core.error_handlers import (
 from app.core.exceptions import UserAlreadyExistsError, UserNotFoundError
 from app.core.logging import setup_logging
 from app.core.openapi import OPENAPI_TAGS
-from app.services.init_admin import create_admin_if_not_exists
 from app.core.redis import redis_manager
 
 setup_logging()
@@ -33,6 +32,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await redis_manager.connect()
     yield
     await redis_manager.close()
+
 
 app = FastAPI(
     title=settings.app_title,
