@@ -1,5 +1,20 @@
 from app.schemas.error import ErrorResponse
 
+OK = {
+    200: {'description': 'Успешно'},
+}
+
+CREATED = {
+    201: {'description': 'Успешно'},
+}
+
+BAD_REQUEST = {
+    400: {
+        'model': ErrorResponse,
+        'description': 'Ошибка в параметрах запроса',
+    },
+}
+
 UNAUTHORIZED_RESPONSE = {
     401: {
         'model': ErrorResponse,
@@ -24,7 +39,7 @@ NOT_FOUND_RESPONSE = {
 CONFLICT_RESPONSE = {
     409: {
         'model': ErrorResponse,
-        'description': 'Пользователь с такими данными уже существует',
+        'description': 'Возникли конфликты',
     },
 }
 
