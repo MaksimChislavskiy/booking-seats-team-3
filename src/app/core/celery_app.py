@@ -13,4 +13,4 @@ celery_app.conf.update(
     enable_utc=True,
 )
 
-import app.tasks  # noqa
+celery_app.autodiscover_tasks(["app.tasks"])
