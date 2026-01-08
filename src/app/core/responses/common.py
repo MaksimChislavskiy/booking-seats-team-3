@@ -1,10 +1,10 @@
 from app.schemas.error import ErrorResponse
 
-OK = {
+OK_RESPONSE = {
     200: {'description': 'Успешно'},
 }
 
-CREATED = {
+CREATED_RESPONSE = {
     201: {'description': 'Успешно'},
 }
 
