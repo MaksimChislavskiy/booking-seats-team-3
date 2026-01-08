@@ -20,6 +20,7 @@ class Table(Base):
         nullable=True,
         doc='Описание, характеристики стола.',
     )
+    # FIXME на seats_count
     seat_number: Mapped[int] = mapped_column(
         Integer(),
         nullable=False,
