@@ -5,10 +5,10 @@ from app.core.db import get_async_session
 from app.core.responses import (
     BAD_REQUEST,
     CONFLICT_RESPONSE,
-    CREATED,
+    CREATED_RESPONSE,
     FORBIDDEN_RESPONSE,
     NOT_FOUND_RESPONSE,
-    OK,
+    OK_RESPONSE,
     UNAUTHORIZED_RESPONSE,
     VALIDATION_ERROR_RESPONSE,
 )
@@ -35,7 +35,7 @@ router = APIRouter()
         '- Пользователь видит только активные кафе.'
     ),
     responses={
-        **OK,
+        **OK_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
@@ -76,7 +76,7 @@ async def read_list(
         'Доступно только администраторам.'
     ),
     responses={
-        **CREATED,
+        **CREATED_RESPONSE,
         **BAD_REQUEST,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
@@ -125,7 +125,7 @@ async def create(
         '- Пользователь может получить только активное кафе.'
     ),
     responses={
-        **OK,
+        **OK_RESPONSE,
         **BAD_REQUEST,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
@@ -164,7 +164,7 @@ async def read_cafe(
         '- Обычный пользователь не имеет доступа.\n\n'
     ),
     responses={
-        **OK,
+        **OK_RESPONSE,
         **BAD_REQUEST,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
@@ -216,7 +216,7 @@ async def update(
         'Доступно только администраторам.'
     ),
     responses={
-        **OK,
+        **OK_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
@@ -224,7 +224,7 @@ async def update(
         **VALIDATION_ERROR_RESPONSE,
     },
     dependencies=[Depends(current_admin)],
-)
+)  # FIXME: Может быть?
 async def deactivate_cafe(
     cafe_id: int = Path(..., description='ID кафе'),
     user: User = Depends(current_active_user),
@@ -244,4 +244,8 @@ async def deactivate_cafe(
         HTTPException: Если кафе не найдено или уже деактивировано.
 
     """
-    return await cafe_service.deactivate_cafe(cafe_id, user, session)
+    return await cafe_service.deactivate_cafe(
+        cafe_id=cafe_id,
+        user=user,
+        session=session,
+    )
