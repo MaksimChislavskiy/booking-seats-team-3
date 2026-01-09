@@ -12,12 +12,12 @@ class TimeSlotBase(BaseModel):
 
     start_time: time = Field(
         ...,
-        examples=['09:00'],
+        examples=['10:00'],
         description='Время начала слота',
     )
     end_time: time = Field(
         ...,
-        examples=['11:00'],
+        examples=['12:00'],
         description='Время окончания слота',
     )
     description: str | None = Field(
@@ -47,9 +47,16 @@ class TimeSlotCreate(TimeSlotBase):
 class TimeSlotUpdate(TimeSlotBase):
     """Схема для обновления временного слота."""
 
-    # TODO: Добавить examples как выше?
-    start_time: time | None = Field(None, description='Время начала слота')
-    end_time: time | None = Field(None, description='Время окончания слота')
+    start_time: time | None = Field(
+        None,
+        examples=['10:00'],
+        description='Время начала слота',
+    )
+    end_time: time | None = Field(
+        None,
+        examples=['12:00'],
+        description='Время окончания слота',
+    )
     is_active: bool | None = Field(None, description='Статус активности слота')
 
     model_config = ConfigDict(extra='forbid')
