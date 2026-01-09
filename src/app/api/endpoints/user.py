@@ -32,7 +32,7 @@ router = APIRouter()
         **FORBIDDEN_RESPONSE,
     },
 )
-async def get_users(
+async def get_users_list(
     session: AsyncSession = Depends(get_async_session),
 ) -> list[UserInfo]:
     """Возвращает информацию о всех пользователях.
@@ -168,3 +168,6 @@ async def update_user(
         user_in=user_in,
         session=session,
     )
+
+
+# TODO: Add deactivate_user

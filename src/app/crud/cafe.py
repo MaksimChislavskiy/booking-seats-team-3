@@ -7,6 +7,7 @@ from app.schemas import CafeCreate, CafeUpdate
 
 
 class CRUDCafe(CRUDBase[Cafe, CafeCreate, CafeUpdate]):
+    # FIXME: docstring
     """CRUD-операции для модели Cafe."""
 
     async def get_cafes(

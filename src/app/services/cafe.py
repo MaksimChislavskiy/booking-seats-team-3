@@ -11,6 +11,9 @@ from app.schemas.cafe import CafeUpdate
 logger = logging.getLogger(__name__)
 
 
+# FIXME: ВЕЗДЕ после получения cafe использовать cafe.id
+
+
 async def get_cafe_or_404(
     cafe_id: int,
     session: AsyncSession,
@@ -92,7 +95,7 @@ class CafeService:
     доступа к логике работы с кафе.
     """
 
-    # FIXME: убрать приставку _get_user и ниже тоже
+    # FIXME: убрать приставку _get_user и ниже тоже?
     async def get_cafe_by_id_for_user(
         self,
         cafe_id: int,
@@ -131,7 +134,7 @@ class CafeService:
 
         if user.role == UserRole.MANAGER and (
             cafe.is_active or cafe.id == user.cafe_id
-        ):  # FIXME здесь использовать can_manage_cafe
+        ):  # FIXME здесь использовать can_manage_cafe?
             return cafe
 
         if user.role == UserRole.USER and cafe.is_active:

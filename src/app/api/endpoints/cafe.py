@@ -40,7 +40,7 @@ router = APIRouter()
         **VALIDATION_ERROR_RESPONSE,
     },
 )
-async def read_list(
+async def get_cafes_list(
     user: User = Depends(current_active_user),
     show_all: bool = Query(
         False,
@@ -84,7 +84,7 @@ async def read_list(
     },
     dependencies=[Depends(current_admin)],
 )
-async def create(
+async def create_cafe(
     cafe_in: CafeCreate,
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
@@ -133,7 +133,7 @@ async def create(
         **VALIDATION_ERROR_RESPONSE,
     },
 )
-async def read_cafe(
+async def get_cafe_by_id(
     cafe_id: int = Path(..., description='ID кафе'),
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
@@ -173,7 +173,7 @@ async def read_cafe(
     },
     dependencies=[Depends(current_admin_or_manager)],
 )
-async def update(
+async def update_cafe(
     cafe_id: int = Path(..., description='ID кафе'),
     *,
     cafe_in: CafeUpdate,
