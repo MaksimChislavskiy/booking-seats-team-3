@@ -41,7 +41,6 @@ class CafeBase(BaseModel):
         max_length=MAX_LENGTH_CAFE_DESCRIPTION,
         description='Описание кафе',
     )
-    # FIXME: исправить на обязательное и в моделях везде поменять где требуется
     photo_id: UUID | None = Field(
         None,
         description='UUID фотографии кафе',
