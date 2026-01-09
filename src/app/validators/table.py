@@ -32,7 +32,7 @@ async def check_cafe_exists(
 async def manager_assigned_to_cafe(
     session: AsyncSession,
     user_id: int,
-    cafe_id: int
+    cafe_id: int,
 ) -> bool:
     """Проверяет, привязку менеджера к текущему кафе."""
     result = await session.execute(
@@ -41,8 +41,8 @@ async def manager_assigned_to_cafe(
         .join(Cafe.managers)
         .where(
             Cafe.id == cafe_id,
-            User.id == user_id
-        )
+            User.id == user_id,
+        ),
     )
     count = result.scalar()
     if count is None:

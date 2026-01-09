@@ -126,7 +126,7 @@ async def update_table(
     if not await manager_assigned_to_cafe(session, current_user.id, cafe_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="У вас нет прав управлять столами этого кафе."
+            detail='У вас нет прав управлять столами этого кафе.',
         )
     logger.debug(
         'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
@@ -247,7 +247,7 @@ async def create_table(
     if not await manager_assigned_to_cafe(session, current_user.id, cafe_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Нельзя создавать столы в чужом кафе."
+            detail='Нельзя создавать столы в чужом кафе.',
         )
     logger.debug(
         'Кафе существует. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
@@ -326,7 +326,7 @@ async def list_tables(
     tables = await table_crud.get_multi(
         filters=filters,
         session=session,
-        options=[selectinload(Table.cafe)]
+        options=[selectinload(Table.cafe)],
         )
     logger.info(
         'Возвращён список столов. cafe_id=%d, count=%d, show_all=%s, role=%s',

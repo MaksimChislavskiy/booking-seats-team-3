@@ -81,6 +81,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         Args:
             filters: Список описаний фильтров или None.
             session: Асинхронная SQLAlchemy-сессия.
+            options: Список опций SQLAlchemy (joinedload, selectinload),
+            которые могут быть применены к запросу через stmt.options().
 
         Returns:
             Список объектов модели.
