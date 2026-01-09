@@ -27,7 +27,7 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
         self,
         cafe_id: int,
         session: AsyncSession,
-    ) -> list[Booking]:
+     ) -> list[Booking]:
         """Возвращает все бронирования кафе."""
         stmt = select(Booking).where(Booking.cafe_id == cafe_id)
         result = await session.execute(stmt)

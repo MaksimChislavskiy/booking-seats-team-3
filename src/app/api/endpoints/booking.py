@@ -15,17 +15,22 @@ router = APIRouter()
     response_model=BookingInfo,
     status_code=status.HTTP_201_CREATED,
     summary='Создать бронирование',
-    description='Создаёт новое бронирование для авторизованного пользователя.',
 )
-async def create(
+async def create_booking(
     booking_in: BookingCreate,
     session: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(current_active_user),
 ) -> BookingInfo:
-    """Создаёт бронирование."""
+    """Создает новое бронирование для текущего пользователя."""
     data = booking_in.model_dump()
     data['user_id'] = current_user.id
-    return await booking_crud.create(data, session=session)
+    booking = await booking_crud.create(data, session=session)
+
+    await session.refresh(
+        booking,
+        attribute_names=['user', 'cafe', 'tables_slots'],
+    )
+    return booking
 
 
 @router.get(
@@ -83,7 +88,7 @@ async def get_booking(
     current_user: User = Depends(current_active_user),
 ) -> BookingInfo:
     """Детальная информация о бронировании."""
-    booking = await booking_crud.get_by_id(session, booking_id)
+    booking = await booking_crud.get_by_id(booking_id, session=session)
     if not booking:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
