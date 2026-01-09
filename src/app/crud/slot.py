@@ -5,11 +5,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
 from app.models import Slot
-from app.schemas import TimeSlotCreate, TimeSlotUpdate
 
 
 class CRUDSlot(CRUDBase):
-    """CRUD-операции для временных слотов."""
+    """CRUD-операции для модели Slot.
+
+    Класс инкапсулирует все операции чтения и записи временных слотов
+    в базе данных. Не содержит бизнес-логики и проверок прав доступа.
+
+    Ответственность:
+    - получение слотов по кафе;
+    - получение слота по идентификаторам;
+    - поиск слотов по временным интервалам;
+    - поиск пересекающихся активных слотов.
+
+    Используется сервисным слоем для реализации бизнес-логики.
+    """
 
     async def get_cafe_slots(
         self,
@@ -17,16 +28,20 @@ class CRUDSlot(CRUDBase):
         show_all: bool = False,
         *,
         session: AsyncSession,
-    ) -> list[Slot]:  # FIXME: Update docstring
-        """Получает список временных слотов в кафе.
+    ) -> list[Slot]:
+        """Возвращает список временных слотов, принадлежащих кафе.
+
+        Метод выполняет только фильтрацию данных и не учитывает
+        права доступа пользователя. Ограничения по ролям и доступу
+        должны применяться на уровне сервисного слоя.
 
         Args:
-            cafe_id: ID кафе
-            show_all: Показывать все слоты или только активные
+            cafe_id: Идентификатор кафе.
+            show_all: Если True — возвращает все слоты, иначе только активные.
             session: Асинхронная SQLAlchemy-сессия.
 
         Returns:
-            Список временных слотов кафе
+            Список временных слотов.
 
         """
         filters = [{'field': 'cafe_id', 'op': 'eq', 'value': cafe_id}]
@@ -36,7 +51,7 @@ class CRUDSlot(CRUDBase):
 
         return await self.get_multi(filters, session=session)
 
-    async def get_by_id_and_cafe(  # FIXME: name?
+    async def get_by_id_and_cafe(
         self,
         slot_id: int,
         cafe_id: int,
@@ -63,88 +78,6 @@ class CRUDSlot(CRUDBase):
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
-    # async def create_with_cafe(  # FIXME: Удалить это
-    #     self,
-    #     session: AsyncSession,
-    #     slot_in: TimeSlotCreate,
-    # ) -> Slot:
-    #     """Создает новый временной слот.
-
-    #     Args:
-    #         session: Асинхронная сессия БД
-    #         slot_in: Данные для создания слота
-
-    #     Returns:
-    #         Созданный слот
-
-    #     """
-    #     db_slot = Slot(
-    #         cafe_id=slot_in.cafe_id,
-    #         start_time=slot_in.start_time,
-    #         end_time=slot_in.end_time,
-    #         description=slot_in.description,
-    #     )
-
-    #     return await self.create(db_slot, session)
-
-    async def update_slot(  # FIXME: Удалить это?
-        self,
-        session: AsyncSession,
-        db_slot: Slot,
-        slot_in: TimeSlotUpdate,
-    ) -> Slot:
-        """Обновляет существующий временной слот.
-
-        Args:
-            session: Асинхронная SQLAlchemy-сессия.
-            db_slot: Существующий слот из БД
-            slot_in: Данные для обновления
-
-        Returns:
-            Обновленный слот
-
-        """
-        update_data = slot_in.model_dump(exclude_unset=True)
-        return await self.update(db_slot, update_data, session)
-
-    # FIXME: Удалить это
-    # async def check_time_slot_exists(
-    #     self,
-    #     cafe_id: int,
-    #     start_time: time,
-    #     end_time: time,
-    #     exclude_slot_id: int | None = None,
-    #     *,
-    #     session: AsyncSession,
-    # ) -> bool:
-    #     """Проверяет существование слота с таким же интервалом в кафе.
-
-    #     Args:
-    #         session: Асинхронная сессия БД
-    #         cafe_id: ID кафе
-    #         start_time: Время начала (datetime.time)
-    #         end_time: Время окончания (datetime.time)
-    #         exclude_slot_id: ID слота для исключения (при обновлении)
-
-    #     Returns:
-    #         True если слот существует, иначе False
-
-    #     """
-    #     stmt = select(Slot).where(
-    #         and_(
-    #             Slot.cafe_id == cafe_id,
-    #             Slot.start_time == start_time,
-    #             Slot.end_time == end_time,
-    #         ),
-    #     )
-
-    #     if exclude_slot_id is not None:
-    #         stmt = stmt.where(Slot.id != exclude_slot_id)
-
-    #     result = await session.execute(stmt)
-    #     slot = result.scalar_one_or_none()
-    #     return slot is not None
-
     async def get_slot_by_time_range(
         self,
         cafe_id: int,
@@ -155,7 +88,8 @@ class CRUDSlot(CRUDBase):
     ) -> Slot | None:
         """Возвращает слот с точным временным интервалом в кафе.
 
-        Используется для проверки уникальности слота.
+        Используется для проверки уникальности временного интервала
+        в рамках одного кафе.
 
         Args:
             cafe_id: Идентификатор кафе.
@@ -182,23 +116,30 @@ class CRUDSlot(CRUDBase):
         cafe_id: int,
         start_time: time,
         end_time: time,
+        exclude_slot_id: int | None = None,
         *,
         session: AsyncSession,
     ) -> list[Slot]:
-        # FIXME: docstring
-        """Возвращает активные слоты, пересекающиеся с временным диапазоном.
+        """Возвращает активные слоты, пересекающиеся с временным интервалом.
 
-        Используется для проверки конфликтов при создании и обновлении слотов.
-        Неактивные слоты не должны блокировать управление расписанием.
+        Используется для проверки конфликтов
+        при создании и обновлении временных слотов.
+
+        Особенности:
+        - учитываются только активные (`is_active = True`) слоты;
+        - при обновлении слота текущий слот может быть исключён
+                из проверки с помощью параметра `exclude_slot_id`.
 
         Args:
             cafe_id: Идентификатор кафе.
-            start_time: Время начала диапазона.
-            end_time: Время окончания диапазона.
+            start_time: Время начала проверяемого интервала.
+            end_time: Время окончания проверяемого интервала.
+            exclude_slot_id: ID слота, который необходимо исключить
+                        из проверки (используется при обновлении слота).
             session: Асинхронная SQLAlchemy-сессия.
 
         Returns:
-            Список активных слотов, пересекающихся с диапазоном.
+            Список активных слотов, пересекающихся с заданным интервалом.
 
         """
         # FIXME: правильная ли проверка? Как она работает получше узнать
@@ -210,6 +151,9 @@ class CRUDSlot(CRUDBase):
                 Slot.end_time > start_time,
             ),
         )
+
+        if exclude_slot_id is not None:
+            stmt = stmt.where(Slot.id != exclude_slot_id)
 
         result = await session.execute(stmt)
         return result.scalars().all()
