@@ -357,6 +357,7 @@ async def list_tables(
 async def delete_table(
     cafe_id: int,
     table_id: int,
+    current_user: User = Depends(current_admin_or_manager),
     session: AsyncSession = Depends(get_async_session),
 ) -> Response:
     """Мягкое удаление стола (для администраторов и менеджеров)."""
@@ -370,6 +371,11 @@ async def delete_table(
     )
 
     cafe = await check_cafe_exists(cafe_id, session)
+    if not await manager_assigned_to_cafe(session, current_user.id, cafe_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Нельзя удалять столы в чужом кафе.',
+        )
     logger.debug(
         'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id},
     )
