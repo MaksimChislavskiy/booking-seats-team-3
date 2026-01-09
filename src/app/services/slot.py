@@ -76,7 +76,7 @@ class SlotService:
             return slot
 
         if user.role == UserRole.MANAGER:
-            if can_manage_cafe(user, cafe_id):
+            if can_manage_cafe(user, cafe.id):  # REVIEW: Проверить
                 return slot
 
             self._ensure_slot_is_active(slot, cafe)
@@ -134,7 +134,7 @@ class SlotService:
             effective_show_all = False
 
         return await slot_crud.get_cafe_slots(
-            cafe_id=cafe_id,
+            cafe_id=cafe.id,  # REVIEW: Проверить
             show_all=effective_show_all,
             session=session,
         )
@@ -188,22 +188,25 @@ class SlotService:
         self._validate_time_range(slot_in.start_time, slot_in.end_time)
 
         await self._check_time_slot_exists(
-            cafe_id,  # FIXME: Использовать ниже везде cafe.id? как лучше?
-            slot_in.start_time,
-            slot_in.end_time,
+            cafe_id=cafe.id,  # REVIEW: Проверить
+            start_time=slot_in.start_time,
+            end_time=slot_in.end_time,
             exclude_slot_id=None,
             session=session,
         )
 
         await self._check_overlapping_slots(
-            cafe_id,
-            slot_in.start_time,
-            slot_in.end_time,
+            cafe_id=cafe.id,  # REVIEW: Проверить
+            start_time=slot_in.start_time,
+            end_time=slot_in.end_time,
             exclude_slot_id=None,
             session=session,
         )
 
-        slot_data = self._prepare_create_data(slot_in, cafe_id)
+        slot_data = self._prepare_create_data(
+            slot_in,
+            cafe.id,
+        )  # REVIEW: Проверить
 
         slot = await slot_crud.create(slot_data, session=session)
 
@@ -268,7 +271,11 @@ class SlotService:
                 detail='Недостаточно прав',
             )
 
-        slot = await self._get_time_slot_or_404(slot_id, cafe_id, session)
+        slot = await self._get_time_slot_or_404(
+            slot_id,
+            cafe.id,
+            session,
+        )  # REVIEW: Проверить
 
         self._validate_time_range(
             start_time=slot_in.start_time or slot.start_time,
@@ -276,19 +283,18 @@ class SlotService:
         )
 
         await self._check_time_slot_exists(
-            cafe_id=cafe_id,
+            cafe_id=cafe.id,  # REVIEW: Проверить
             start_time=slot_in.start_time or slot.start_time,
             end_time=slot_in.end_time or slot.end_time,
-            exclude_slot_id=slot.id,
+            exclude_slot_id=slot.id,  # REVIEW: Проверить
             session=session,
         )
 
-        # FIXME: вынести exclude_slot_id в CRUD?
         await self._check_overlapping_slots(
-            cafe_id=cafe_id,
+            cafe_id=cafe.id,  # REVIEW: Проверить
             start_time=slot_in.start_time or slot.start_time,
             end_time=slot_in.end_time or slot.end_time,
-            exclude_slot_id=slot.id,
+            exclude_slot_id=slot.id,  # REVIEW: Проверить
             session=session,
         )
 
@@ -341,14 +347,17 @@ class SlotService:
         """
         cafe = await get_cafe_or_404(cafe_id, session)
 
-        # FIXME: MayBe cafe_id из запроса и ниже тоже?
         if user.role != UserRole.ADMIN and not can_manage_cafe(user, cafe.id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail='Недостаточно прав',
             )
 
-        slot = await self._get_time_slot_or_404(slot_id, cafe_id, session)
+        slot = await self._get_time_slot_or_404(
+            slot_id,
+            cafe.id,
+            session,
+        )  # REVIEW: Проверить
 
         if not slot.is_active:
             raise HTTPException(
@@ -506,12 +515,9 @@ class SlotService:
             cafe_id=cafe_id,
             start_time=start_time,
             end_time=end_time,
+            exclude_slot_id=exclude_slot_id,
             session=session,
         )
-
-        if exclude_slot_id is not None:
-            # FIXME: понять как это точно работает и можно ли по другому?
-            slots = [slot for slot in slots if slot.id != exclude_slot_id]
 
         if slots:
             raise HTTPException(
