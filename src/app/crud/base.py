@@ -50,6 +50,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         filters: list[dict[str, Any]] | None = None,
         *,
         session: AsyncSession,
+        options: list[Any] | None = None,
     ) -> list[ModelType]:
         """Возвращает список объектов модели с поддержкой AND / OR фильтрации.
 
@@ -107,6 +108,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                     expressions.append(self._build_condition(item))
 
             stmt = stmt.where(and_(*expressions))
+
+        if options:
+            for option in options:
+                stmt = stmt.options(option)
 
         result = await session.execute(stmt)
         return result.scalars().all()

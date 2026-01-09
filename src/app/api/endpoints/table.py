@@ -1,9 +1,10 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.db import get_async_session
 from app.core.responses import (
@@ -16,7 +17,7 @@ from app.crud.table import table_crud
 from app.models import Table, User, UserRole
 from app.schemas import TableCreate, TableInfo, TableUpdate
 from app.services.auth import current_active_user, current_admin_or_manager
-from app.validators.table import check_cafe_exists
+from app.validators.table import check_cafe_exists, manager_assigned_to_cafe
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +108,7 @@ async def update_table(
     cafe_id: int,
     table_id: int,
     update_data: TableUpdate,
+    current_user: User = Depends(current_admin_or_manager),
     session: AsyncSession = Depends(get_async_session),
 ) -> Table:
     """Обновление информации о столе (для администраторов и менеджеров)."""
@@ -121,6 +123,11 @@ async def update_table(
     )
 
     cafe = await check_cafe_exists(cafe_id, session)
+    if not await manager_assigned_to_cafe(session, current_user.id, cafe_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="У вас нет прав управлять столами этого кафе."
+        )
     logger.debug(
         'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
 
@@ -146,6 +153,7 @@ async def update_table(
             obj_in=update_data,
             session=session,
         )
+        await session.refresh(updated_table, attribute_names=['cafe'])
         logger.info(
             'Стол обновлён. cafe_id=%d, table_id=%d',
             cafe_id, table_id,
@@ -223,6 +231,7 @@ async def update_table(
 async def create_table(
     cafe_id: int,
     data: TableCreate,
+    current_user: User = Depends(current_admin_or_manager),
     session: AsyncSession = Depends(get_async_session),
 ) -> Table:
     """Новый стол в кафе (для администраторов и менеджеров)."""
@@ -235,6 +244,11 @@ async def create_table(
         },
     )
     await check_cafe_exists(cafe_id, session)
+    if not await manager_assigned_to_cafe(session, current_user.id, cafe_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Нельзя создавать столы в чужом кафе."
+        )
     logger.debug(
         'Кафе существует. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
     create_data = data.model_dump()
@@ -243,6 +257,7 @@ async def create_table(
         obj_in=create_data,
         session=session,
         )
+    await session.refresh(new_table, attribute_names=['cafe'])
     logger.info(
         'Стол создан. cafe_id=%d, table_id=%d',
         cafe_id, new_table.id,
@@ -308,7 +323,11 @@ async def list_tables(
             {'field': 'cafe_id', 'op': 'eq', 'value': cafe_id},
             {'field': 'is_active', 'op': 'eq', 'value': True},
         ]
-    tables = await table_crud.get_multi(filters=filters, session=session)
+    tables = await table_crud.get_multi(
+        filters=filters,
+        session=session,
+        options=[selectinload(Table.cafe)]
+        )
     logger.info(
         'Возвращён список столов. cafe_id=%d, count=%d, show_all=%s, role=%s',
         cafe_id, len(tables), show_all, current_active_user.role.value,
@@ -339,7 +358,7 @@ async def delete_table(
     cafe_id: int,
     table_id: int,
     session: AsyncSession = Depends(get_async_session),
-) -> Table:
+) -> Response:
     """Мягкое удаление стола (для администраторов и менеджеров)."""
     logger.info(
         'Деактивация стола. cafe_id=%d, table_id=%d',
@@ -372,7 +391,7 @@ async def delete_table(
         )
 
     try:
-        deactivated_table = await table_crud.soft_delete(
+        await table_crud.soft_delete(
             db_obj=table,
             session=session,
         )
@@ -381,7 +400,7 @@ async def delete_table(
             cafe_id, table_id,
             extra={'cafe_id': cafe_id, 'table_id': table_id},
         )
-        return deactivated_table
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     except OperationalError as e:
         logger.error(

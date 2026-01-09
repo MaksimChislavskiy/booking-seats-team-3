@@ -20,7 +20,7 @@ class Table(Base):
         nullable=True,
         doc='Описание, характеристики стола.',
     )
-    seat_number: Mapped[int] = mapped_column(
+    seats_count: Mapped[int] = mapped_column(
         Integer(),
         nullable=False,
         doc='Количество мест за столом.',
@@ -42,7 +42,7 @@ class Table(Base):
     def __repr__(self) -> str:
         return (
             f'Table id={self.id}, '
-            f'seat_number={self.seat_number}, '
+            f'seats_count={self.seats_count}, '
             f'cafe_id={self.cafe_id}'
         )
 

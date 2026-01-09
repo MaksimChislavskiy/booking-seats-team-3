@@ -2,6 +2,7 @@ import logging
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models import Table
@@ -19,22 +20,18 @@ class CRUDTable(CRUDBase[Table, TableCreate, TableUpdate]):
         cafe_id: int,
         table_id: int,
     ) -> Table | None:
-        """Получение стола по ID с учётом прав пользователя.
-
-        - Для USER: только активные столы (is_active=True)
-        - Для ADMIN/MANAGER: любые столы.
-        """
+        """Получение стола по ID для данного кафе."""
         logger.info(
             'Запрос стола. cafe_id=%d, table_id=%d',
             cafe_id, table_id,
             extra={'cafe_id': cafe_id, 'table_id': table_id},
         )
-        result = await session.execute(
-            select(Table).where(
-                Table.cafe_id == cafe_id,
-                Table.id == table_id,
-            ),
+        query = select(Table).where(
+            Table.cafe_id == cafe_id,
+            Table.id == table_id,
         )
+        query = query.options(selectinload(Table.cafe))
+        result = await session.execute(query)
         return result.scalars().first()
 
     async def get_by_cafe_and_id_with_show(
@@ -79,6 +76,7 @@ class CRUDTable(CRUDBase[Table, TableCreate, TableUpdate]):
                     'cafe_id': cafe_id,
                     'table_id': table_id},
             )
+        query = query.options(selectinload(Table.cafe))
         result = await session.execute(query)
         return result.scalars().first()
 
