@@ -20,16 +20,12 @@ from app.services.slot import slot_service
 router = APIRouter()
 
 
-# FIXME: проверить все доступы и в других сущностях тоже
-
-# FIXME: Заменить название как в остальных сущностях и так же в сервисе?
+# TODO: Проверить как работают эндпоинты и доступы
 
 
-# TODO: Проверить как работает эндпоинт
 @router.get(
     '/',
     response_model=list[TimeSlotInfo],
-    status_code=status.HTTP_200_OK,
     summary='Список временных слотов в кафе',
     description=(
         'Возвращает список временных слотов кафе.\n\n'
@@ -54,8 +50,8 @@ async def get_time_slots_list(
     show_all: bool = Query(
         default=False,
         description=(
-            'Показывать все слоты (включая неактивные). '
-            'По умолчанию показывает только активные слоты'
+            'Показывать все слоты, включая неактивные. '
+            'По умолчанию показывает только активные слоты.'
         ),
     ),
     session: AsyncSession = Depends(get_async_session),
@@ -75,7 +71,6 @@ async def get_time_slots_list(
     )
 
 
-# TODO: Проверить как работает эндпоинт
 @router.post(
     '/',
     response_model=TimeSlotInfo,
@@ -123,11 +118,9 @@ async def create_time_slot(
     )
 
 
-# TODO: Проверить как работает эндпоинт
 @router.get(
     '/{slot_id}',
     response_model=TimeSlotInfo,
-    status_code=status.HTTP_200_OK,
     summary='Информация о временном слоте в кафе по его ID',
     description=(
         'Возвращает информацию о временном слоте в указанном кафе.\n\n'
@@ -189,13 +182,18 @@ async def get_time_slot_by_id(
     )
 
 
-# TODO: Проверить как работает эндпоинт
 @router.patch(
     '/{slot_id}',
     response_model=TimeSlotInfo,
-    status_code=status.HTTP_200_OK,
     summary='Обновление информации о временном слоте в кафе по его ID',
+    description=(
+        'Обновление информации о временном слоте в кафе по его ID. '
+        'Доступно администраторам для любого кафе, '
+        'а также менеджерам — только для тех кафе, '
+        'которыми они управляют.'
+    ),
     responses={
+        **OK_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
@@ -210,8 +208,39 @@ async def update_time_slot(
     user: User = Depends(current_admin_or_manager),
     session: AsyncSession = Depends(get_async_session),
 ) -> TimeSlotInfo:
-    # FIXME: docstring
-    """Обновление информации о временном слоте."""
+    """Обновляет данные временного слота по его идентификатору.
+
+    Позволяет частично обновить параметры временного слота
+    (время начала, окончания, описание, статус активности).
+
+    Доступ предоставляется:
+    - администраторам — для любого кафе;
+    - менеджерам — только для тех кафе, которыми они управляют.
+
+    Перед сохранением изменений выполняется:
+    - проверка существования кафе и слота;
+    - проверка прав доступа пользователя;
+    - валидация итогового временного диапазона;
+    - проверка отсутствия конфликтов с другими активными слотами.
+
+    Args:
+        cafe_id: Идентификатор кафе.
+        slot_id: Идентификатор временного слота.
+        slot_in: Данные для обновления слота.
+        user: Текущий аутентифицированный пользователь.
+        session: Асинхронная сессия SQLAlchemy.
+
+    Returns:
+        Обновлённая информация о временном слоте.
+
+    Raises:
+        HTTPException:
+            - 403, если у пользователя недостаточно прав;
+            - 404, если кафе или слот не найдены;
+            - 400, если временной диапазон некорректен;
+            - 409, если интервал конфликтует с существующими слотами.
+
+    """
     return await slot_service.update_slot(
         cafe_id=cafe_id,
         slot_id=slot_id,
@@ -221,7 +250,6 @@ async def update_time_slot(
     )
 
 
-# TODO: Проверить как работает эндпоинт
 @router.delete(
     '/{slot_id}',
     status_code=status.HTTP_200_OK,
