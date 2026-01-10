@@ -8,7 +8,7 @@ CREATED_RESPONSE = {
     201: {'description': 'Успешно'},
 }
 
-BAD_REQUEST = {
+BAD_REQUEST_RESPONSE = {
     400: {
         'model': ErrorResponse,
         'description': 'Ошибка в параметрах запроса',
@@ -47,35 +47,5 @@ VALIDATION_ERROR_RESPONSE = {
     422: {
         'model': ErrorResponse,
         'description': 'Ошибка валидации данных',
-    },
-}
-
-
-BAD_REQUEST_RESPONSE = {
-    400: {
-        'model': ErrorResponse,
-        'description': 'Ошибка в параметрах запроса',
-    },
-}
-
-# --- Media ---
-MEDIA_NOT_FOUND_RESPONSE = {
-    404: {
-        'model': ErrorResponse,
-        'description': 'Изображение не найдено',
-    },
-}
-
-MEDIA_BAD_REQUEST_RESPONSE = {
-    400: {
-        'model': ErrorResponse,
-        'description': 'Ошибка в параметрах запроса',
-    },
-}
-
-MEDIA_SAVE_ERROR_RESPONSE = {
-    422: {
-        'model': ErrorResponse,
-        'description': 'Ошибка сохранения файла',
     },
 }
