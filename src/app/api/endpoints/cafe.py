@@ -209,6 +209,7 @@ async def update_cafe(
 
 @router.delete(
     '/{cafe_id}',
+    status_code=status.HTTP_200_OK,
     response_model=CafeInfo,
     summary='Деактивировать кафе по ID',
     description=(
@@ -223,11 +224,10 @@ async def update_cafe(
         **CONFLICT_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
-    dependencies=[Depends(current_admin)],
-)  # FIXME: Может быть?
+)
 async def deactivate_cafe(
     cafe_id: int = Path(..., description='ID кафе'),
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_admin),
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Деактивирует кафе по ID.
