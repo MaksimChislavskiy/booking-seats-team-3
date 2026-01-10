@@ -64,6 +64,7 @@ class UserService:
             user_in.username,
             role,
         )
+
         self._validate_required_contacts(user_in)
         await self._check_user_uniqueness(user_in, session)
 
@@ -75,10 +76,9 @@ class UserService:
         )
 
         logger.info(
-            'Пользователь успешно создан: user_id=%s, username=%s, role=%s',
-            user.id,
-            user.username,
-            role,
+            'Пользователь успешно создан: %s',
+            user.__repr__(),
+            extra={'user': f'{user.username} id={user.id}'},
         )
 
         return user
