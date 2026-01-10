@@ -15,8 +15,6 @@ from app.services.cafe import (
 
 logger = logging.getLogger(__name__)
 
-# FIXME: ВЕЗДЕ после получения cafe or slot - использовать cafe.id и slot.id, так же посмотреть в других сервисах
-
 
 class SlotService:
     """Сервис бизнес-логики для управления временными слотами в кафе.
@@ -76,7 +74,7 @@ class SlotService:
             return slot
 
         if user.role == UserRole.MANAGER:
-            if can_manage_cafe(user, cafe.id):  # REVIEW: Проверить
+            if can_manage_cafe(user, cafe.id):
                 return slot
 
             self._ensure_slot_is_active(slot, cafe)
@@ -120,7 +118,6 @@ class SlotService:
             Список временных слотов кафе.
 
         """
-        # FIXME: Пересмотреть доступ по аналогии с get_slot_by_id?
         cafe = await get_cafe_or_404(cafe_id, session)
 
         if user.role == UserRole.ADMIN:
@@ -134,7 +131,7 @@ class SlotService:
             effective_show_all = False
 
         return await slot_crud.get_cafe_slots(
-            cafe_id=cafe.id,  # REVIEW: Проверить
+            cafe_id=cafe.id,
             show_all=effective_show_all,
             session=session,
         )
@@ -188,7 +185,7 @@ class SlotService:
         self._validate_time_range(slot_in.start_time, slot_in.end_time)
 
         await self._check_time_slot_exists(
-            cafe_id=cafe.id,  # REVIEW: Проверить
+            cafe_id=cafe.id,
             start_time=slot_in.start_time,
             end_time=slot_in.end_time,
             exclude_slot_id=None,
@@ -196,7 +193,7 @@ class SlotService:
         )
 
         await self._check_overlapping_slots(
-            cafe_id=cafe.id,  # REVIEW: Проверить
+            cafe_id=cafe.id,
             start_time=slot_in.start_time,
             end_time=slot_in.end_time,
             exclude_slot_id=None,
@@ -206,7 +203,7 @@ class SlotService:
         slot_data = self._prepare_create_data(
             slot_in,
             cafe.id,
-        )  # REVIEW: Проверить
+        )
 
         slot = await slot_crud.create(slot_data, session=session)
 
@@ -275,7 +272,7 @@ class SlotService:
             slot_id,
             cafe.id,
             session,
-        )  # REVIEW: Проверить
+        )
 
         self._validate_time_range(
             start_time=slot_in.start_time or slot.start_time,
@@ -283,18 +280,18 @@ class SlotService:
         )
 
         await self._check_time_slot_exists(
-            cafe_id=cafe.id,  # REVIEW: Проверить
+            cafe_id=cafe.id,
             start_time=slot_in.start_time or slot.start_time,
             end_time=slot_in.end_time or slot.end_time,
-            exclude_slot_id=slot.id,  # REVIEW: Проверить
+            exclude_slot_id=slot.id,
             session=session,
         )
 
         await self._check_overlapping_slots(
-            cafe_id=cafe.id,  # REVIEW: Проверить
+            cafe_id=cafe.id,
             start_time=slot_in.start_time or slot.start_time,
             end_time=slot_in.end_time or slot.end_time,
-            exclude_slot_id=slot.id,  # REVIEW: Проверить
+            exclude_slot_id=slot.id,
             session=session,
         )
 
@@ -357,7 +354,7 @@ class SlotService:
             slot_id,
             cafe.id,
             session,
-        )  # REVIEW: Проверить
+        )
 
         if not slot.is_active:
             raise HTTPException(
