@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
 from app.core.responses import (
-    BAD_REQUEST,
+    BAD_REQUEST_RESPONSE,
     CONFLICT_RESPONSE,
     CREATED_RESPONSE,
     FORBIDDEN_RESPONSE,
@@ -77,7 +77,7 @@ async def get_cafes_list(
     ),
     responses={
         **CREATED_RESPONSE,
-        **BAD_REQUEST,
+        **BAD_REQUEST_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
@@ -125,7 +125,7 @@ async def create_cafe(
     ),
     responses={
         **OK_RESPONSE,
-        **BAD_REQUEST,
+        **BAD_REQUEST_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
@@ -164,7 +164,7 @@ async def get_cafe_by_id(
     ),
     responses={
         **OK_RESPONSE,
-        **BAD_REQUEST,
+        **BAD_REQUEST_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
