@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
 from app.crud.base import CRUDBase
-from app.models import User
+from app.models import User, UserRole
 from app.schemas import UserCreate, UserUpdate
 
 
@@ -71,6 +71,41 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     ) -> User | None:
         """Возвращает пользователя по Telegram ID."""
         return await self._get_by_field(User.tg_id, tg_id, session)
+
+    async def get_managers_by_ids(
+        self,
+        manager_ids: list[int],
+        session: AsyncSession,
+    ) -> list[User]:
+        """Возвращает пользователей с ролью MANAGER по списку ID.
+
+        Args:
+            manager_ids: Список идентификаторов пользователей.
+            session: Асинхронная сессия SQLAlchemy.
+
+        Returns:
+            Список пользователей с ролью MANAGER, чьи ID присутствуют
+            в переданном списке.
+
+        """
+        if not manager_ids:
+            return []
+
+        return await self.get_multi(
+            filters=[
+                {
+                    'field': 'id',
+                    'op': 'in',
+                    'value': manager_ids,
+                },
+                {
+                    'field': 'role',
+                    'op': 'eq',
+                    'value': UserRole.MANAGER,
+                },
+            ],
+            session=session,
+        )
 
 
 user_crud = CRUDUser(User)

@@ -1,6 +1,6 @@
 from .auth import AuthData, AuthToken
 from .booking import BookingCreate, BookingInfo, BookingUpdate
-from .cafe import CafeShortInfo
+from .cafe import CafeCreate, CafeInfo, CafeShortInfo, CafeUpdate
 from .error import ErrorResponse
 from .media import MediaData, MediaInfo
 from .slot import (
@@ -23,7 +23,10 @@ __all__ = [
     'BookingCreate',
     'BookingInfo',
     'BookingUpdate',
+    'CafeCreate',
+    'CafeInfo',
     'CafeShortInfo',
+    'CafeUpdate',
     'ErrorResponse',
     'MediaData',
     'MediaInfo',
