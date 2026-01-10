@@ -63,7 +63,7 @@ async def get_cafes_list(
         Список объектов CafeInfo.
 
     """
-    return await cafe_service.get_cafes_for_user(user, show_all, session)
+    return await cafe_service.get_cafes_list(user, show_all, session)
 
 
 @router.post(
@@ -82,11 +82,10 @@ async def get_cafes_list(
         **FORBIDDEN_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
-    dependencies=[Depends(current_admin)],
 )
 async def create_cafe(
     cafe_in: CafeCreate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_admin),
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Создаёт новое кафе и назначает менеджеров.
@@ -149,7 +148,7 @@ async def get_cafe_by_id(
         Объект CafeInfo.
 
     """
-    return await cafe_service.get_cafe_by_id_for_user(cafe_id, user, session)
+    return await cafe_service.get_cafe_by_id(cafe_id, user, session)
 
 
 @router.patch(
@@ -171,13 +170,13 @@ async def get_cafe_by_id(
         **NOT_FOUND_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
-    dependencies=[Depends(current_admin_or_manager)],
 )
+# TODO: пересмотреть dependencies где они не нужны
 async def update_cafe(
     cafe_id: int = Path(..., description='ID кафе'),
     *,
     cafe_in: CafeUpdate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_admin_or_manager),
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Частично обновляет информацию о кафе по его ID.

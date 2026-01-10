@@ -11,9 +11,6 @@ from app.schemas.cafe import CafeUpdate
 logger = logging.getLogger(__name__)
 
 
-# FIXME: ВЕЗДЕ после получения cafe использовать cafe.id
-
-
 async def get_cafe_or_404(
     cafe_id: int,
     session: AsyncSession,
@@ -42,7 +39,6 @@ async def get_cafe_or_404(
     return cafe
 
 
-# TODO: здесь также использовать эти 3 функции где надо пересмотреть
 def can_manage_cafe(user: User, cafe_id: int) -> bool:
     """Определяет, может ли пользователь управлять указанным кафе.
 
@@ -95,8 +91,7 @@ class CafeService:
     доступа к логике работы с кафе.
     """
 
-    # FIXME: убрать приставку _get_user и ниже тоже?
-    async def get_cafe_by_id_for_user(
+    async def get_cafe_by_id(
         self,
         cafe_id: int,
         user: User,
@@ -132,12 +127,10 @@ class CafeService:
         if user.role == UserRole.ADMIN:
             return cafe
 
-        if user.role == UserRole.MANAGER and (
-            cafe.is_active or cafe.id == user.cafe_id
-        ):  # FIXME здесь использовать can_manage_cafe?
+        if can_manage_cafe(user, cafe.id):
             return cafe
 
-        if user.role == UserRole.USER and cafe.is_active:
+        if user.role in {UserRole.USER, UserRole.MANAGER} and cafe.is_active:
             return cafe
 
         raise HTTPException(
@@ -145,7 +138,7 @@ class CafeService:
             detail='Недостаточно прав для доступа к кафе',
         )
 
-    async def get_cafes_for_user(
+    async def get_cafes_list(
         self,
         user: User,
         show_all: bool,
@@ -282,7 +275,7 @@ class CafeService:
         """
         cafe = await get_cafe_or_404(cafe_id, session)
 
-        if user.role == UserRole.MANAGER and cafe.id != user.cafe_id:
+        if not can_manage_cafe(user, cafe.id) and user.role != UserRole.ADMIN:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail='Недостаточно прав для обновления кафе',
