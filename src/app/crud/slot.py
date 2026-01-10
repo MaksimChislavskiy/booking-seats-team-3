@@ -142,7 +142,6 @@ class CRUDSlot(CRUDBase):
             Список активных слотов, пересекающихся с заданным интервалом.
 
         """
-        # FIXME: правильная ли проверка? Как она работает получше узнать
         stmt = select(Slot).where(
             and_(
                 Slot.cafe_id == cafe_id,

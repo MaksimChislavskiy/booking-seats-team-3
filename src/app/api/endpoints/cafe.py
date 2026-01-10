@@ -171,7 +171,6 @@ async def get_cafe_by_id(
         **VALIDATION_ERROR_RESPONSE,
     },
 )
-# TODO: пересмотреть dependencies где они не нужны
 async def update_cafe(
     cafe_id: int = Path(..., description='ID кафе'),
     *,
