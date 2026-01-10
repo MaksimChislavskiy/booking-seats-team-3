@@ -17,10 +17,12 @@ class Settings(BaseSettings):
 
     app_title: str = 'Система бронирования мест в кафе'
     app_description: str = 'Сервис для бронирования мест в кафе'
-    first_superuser_email: EmailStr | None = None
-    first_superuser_password: str | None = None
     log_level: str = 'INFO'
     cors_origins: list[str] = []
+
+    initial_admin_username: str | None = None
+    initial_admin_email: EmailStr | None = None
+    initial_admin_password: str | None = None
 
     secret_key: str
     algorithm: str
