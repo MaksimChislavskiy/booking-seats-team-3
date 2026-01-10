@@ -10,11 +10,20 @@ from app.schemas.cafe import CafeShortInfo
 class TimeSlotBase(BaseModel):
     """Базовая схема для временного слота."""
 
-    start_time: time = Field(..., description='Время начала слота')
-    end_time: time = Field(..., description='Время окончания слота')
+    start_time: time = Field(
+        ...,
+        examples=['10:00'],
+        description='Время начала слота',
+    )
+    end_time: time = Field(
+        ...,
+        examples=['12:00'],
+        description='Время окончания слота',
+    )
     description: str | None = Field(
         None,
         max_length=MAX_LENGTH_SLOT_DESCRIPTION,
+        examples=['Утреннее время'],
         description='Описание слота',
     )
 
@@ -38,8 +47,16 @@ class TimeSlotCreate(TimeSlotBase):
 class TimeSlotUpdate(TimeSlotBase):
     """Схема для обновления временного слота."""
 
-    start_time: time | None = Field(None, description='Время начала слота')
-    end_time: time | None = Field(None, description='Время окончания слота')
+    start_time: time | None = Field(
+        None,
+        examples=['10:00'],
+        description='Время начала слота',
+    )
+    end_time: time | None = Field(
+        None,
+        examples=['12:00'],
+        description='Время окончания слота',
+    )
     is_active: bool | None = Field(None, description='Статус активности слота')
 
     model_config = ConfigDict(extra='forbid')
