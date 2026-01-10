@@ -168,6 +168,3 @@ async def update_user(
         user_in=user_in,
         session=session,
     )
-
-
-# TODO: Add deactivate_user

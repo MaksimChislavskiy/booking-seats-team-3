@@ -20,9 +20,6 @@ from app.services.slot import slot_service
 router = APIRouter()
 
 
-# TODO: Проверить как работают эндпоинты и доступы
-
-
 @router.get(
     '/',
     response_model=list[TimeSlotInfo],
