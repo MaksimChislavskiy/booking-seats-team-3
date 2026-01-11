@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import slot_crud
 from app.models import Cafe, Slot, User, UserRole
-from app.schemas import TimeSlotCreate, TimeSlotInfo, TimeSlotUpdate
+from app.schemas import TimeSlotCreate, TimeSlotUpdate
 from app.services.cafe import (
     can_manage_cafe,
     ensure_cafe_is_active,
@@ -123,6 +123,7 @@ class SlotService:
         if user.role == UserRole.ADMIN:
             effective_show_all = show_all
 
+        # FIXME: Упростить проверку
         elif user.role == UserRole.MANAGER and can_manage_cafe(user, cafe.id):
             effective_show_all = show_all
 
@@ -224,7 +225,7 @@ class SlotService:
         slot_in: TimeSlotUpdate,
         user: User,
         session: AsyncSession,
-    ) -> TimeSlotInfo:
+    ) -> Slot:
         """Обновляет данные временного слота в кафе.
 
         Метод позволяет изменить параметры временного слота
