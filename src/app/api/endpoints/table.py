@@ -63,10 +63,16 @@ async def get_table(
     cafe = await check_cafe_exists(cafe_id, session)
     admin = current_active_user.role == UserRole.ADMIN
     current_cafe_manager = await manager_assigned_to_cafe(
-        session, current_active_user.id, cafe_id)
+        session,
+        current_active_user.id,
+        cafe_id,
+        )
     await check_cafe_is_active(cafe, admin, current_cafe_manager)
     logger.debug(
-        'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
+        'Кафе найдено. cafe_id=%d',
+        cafe_id,
+        extra={'cafe_id': cafe_id},
+        )
     show_all = admin or current_cafe_manager
     table = await table_crud.get_by_cafe_and_id_with_show(
         session=session,
@@ -361,10 +367,16 @@ async def list_tables(
     cafe = await check_cafe_exists(cafe_id, session)
     admin = current_active_user.role == UserRole.ADMIN
     current_cafe_manager = await manager_assigned_to_cafe(
-        session, current_active_user.id, cafe_id)
+        session,
+        current_active_user.id,
+        cafe_id,
+        )
     await check_cafe_is_active(cafe, admin, current_cafe_manager)
     logger.debug(
-        'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
+        'Кафе найдено. cafe_id=%d',
+        cafe_id,
+        extra={'cafe_id': cafe_id},
+        )
     can_show_all = admin or current_cafe_manager
     if show_all and can_show_all:
         logger.debug(
