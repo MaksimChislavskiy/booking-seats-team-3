@@ -71,17 +71,37 @@ class SlotService:
         cafe = await get_cafe_or_404(cafe_id, session)
 
         if user.role == UserRole.ADMIN:
+            logger.info(
+                'Получен слот администратором: %s',
+                slot.__repr__(),
+                extra={'user': f'{user.username} id={user.id}'},
+            )
             return slot
 
         if user.role == UserRole.MANAGER:
             if can_manage_cafe(user, cafe.id):
+                logger.info(
+                    'Получен слот менеджером своего кафе: %s',
+                    slot.__repr__(),
+                    extra={'user': f'{user.username} id={user.id}'},
+                )
                 return slot
 
             self._ensure_slot_is_active(slot, cafe)
+            logger.info(
+                'Получен слот менеджером чужого кафе: %s',
+                slot.__repr__(),
+                extra={'user': f'{user.username} id={user.id}'},
+            )
             return slot
 
         if user.role == UserRole.USER:
             self._ensure_slot_is_active(slot, cafe)
+            logger.info(
+                'Получен слот пользователем: %s',
+                slot.__repr__(),
+                extra={'user': f'{user.username} id={user.id}'},
+            )
             return slot
 
         raise HTTPException(
@@ -130,11 +150,23 @@ class SlotService:
             ensure_cafe_is_active(cafe)
             effective_show_all = False
 
-        return await slot_crud.get_cafe_slots(
+        slots = await slot_crud.get_cafe_slots(
             cafe_id=cafe.id,
             show_all=effective_show_all,
             session=session,
         )
+        logger.info(
+            'Получен список слотов для кафе %s: '
+            'количество=%s, show_all=%s, '
+            'роль_пользователя=%s',
+            cafe_id,
+            len(slots),
+            effective_show_all,
+            user.role.value,
+            extra={'user': f'{user.username} id={user.id}'},
+        )
+        
+        return slots
 
     async def create_slot(
         self,
@@ -208,10 +240,8 @@ class SlotService:
         slot = await slot_crud.create(slot_data, session=session)
 
         logger.info(
-            'Создан слот (id=%s) диапазон: "start_time"=%s, "end_time"=%s',
-            slot.id,
-            slot.start_time,
-            slot.end_time,
+            'Создан слот: %s',
+            slot.__repr__(),
             extra={'user': f'{user.username} id={user.id}'},
         )
 
@@ -302,9 +332,8 @@ class SlotService:
         )
 
         logger.info(
-            'Слот (id=%s) обновлен пользователем с ролью: "%s"',
-            slot.id,
-            user.role,
+            'Слот обновлен: %s',
+            slot.__repr__(),
             extra={'user': f'{user.username} id={user.id}'},
         )
 
@@ -365,8 +394,8 @@ class SlotService:
         slot = await slot_crud.soft_delete(slot, session)
 
         logger.info(
-            'Слот (id=%s) деактивирован.',
-            slot.id,
+            'Слот деактивирован: %s',
+            slot.__repr__(),
             extra={'user': f'{user.username} id={user.id}'},
         )
 

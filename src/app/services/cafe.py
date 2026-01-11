@@ -125,12 +125,27 @@ class CafeService:
         cafe = await get_cafe_or_404(cafe_id, session)
 
         if user.role == UserRole.ADMIN:
+            logger.info(
+                'Получено кафе администратором: %s',
+                cafe.__repr__(),
+                extra={'user': f'{user.username} id={user.id}'},
+            )
             return cafe
 
         if can_manage_cafe(user, cafe.id):
+            logger.info(
+                'Получено кафе менеджером: %s',
+                cafe.__repr__(),
+                extra={'user': f'{user.username} id={user.id}'},
+            )
             return cafe
 
         if user.role in {UserRole.USER, UserRole.MANAGER} and cafe.is_active:
+            logger.info(
+                'Получено кафе пользователем: %s',
+                cafe.__repr__(),
+                extra={'user': f'{user.username} id={user.id}'},
+            )
             return cafe
 
         raise HTTPException(
@@ -168,15 +183,23 @@ class CafeService:
 
         """
         if user.role == UserRole.ADMIN:
-            return await cafe_crud.get_cafes(show_all, session=session)
-
-        if user.role == UserRole.MANAGER:
-            return await cafe_crud.get_active_and_own_cafes(
+            cafes = await cafe_crud.get_cafes(show_all, session=session)
+        elif user.role == UserRole.MANAGER:
+            cafes = await cafe_crud.get_active_and_own_cafes(
                 cafe_id=user.cafe_id,
                 session=session,
             )
-
-        return await cafe_crud.get_active_cafes(session=session)
+        else:
+            cafes = await cafe_crud.get_active_cafes(session=session)
+        logger.info(
+            'Получен список кафе: количество=%s, '
+            'роль_пользователя=%s, show_all=%s',
+            len(cafes),
+            user.role.value,
+            show_all,
+            extra={'user': f'{user.username} id={user.id}'},
+        )
+        return cafes
 
     async def create_cafe(
         self,
@@ -222,9 +245,8 @@ class CafeService:
         await session.refresh(cafe)
 
         logger.info(
-            'Создано кафе "%s" (id=%s)',
-            cafe.name,
-            cafe.id,
+            'Создано кафе: %s',
+            cafe.__repr__(),
             extra={'user': f'{user.username} id={user.id}'},
         )
 
@@ -311,9 +333,8 @@ class CafeService:
         await session.refresh(cafe)
 
         logger.info(
-            'Кафе (id=%s) обновлено пользователем с ролью: "%s"',
-            cafe.id,
-            user.role,
+            'Кафе обновлено: %s',
+            cafe.__repr__(),
             extra={'user': f'{user.username} id={user.id}'},
         )
 
@@ -356,9 +377,8 @@ class CafeService:
         await cafe_crud.soft_delete(cafe, session)
 
         logger.info(
-            'Кафе "%s" (id=%s) деактивировано.',
-            cafe.name,
-            cafe.id,
+            'Кафе деактивировано: %s',
+            cafe.__repr__(),
             extra={'user': f'{user.username} id={user.id}'},
         )
 
