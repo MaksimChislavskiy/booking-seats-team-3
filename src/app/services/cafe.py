@@ -11,6 +11,72 @@ from app.schemas.cafe import CafeUpdate
 logger = logging.getLogger(__name__)
 
 
+async def get_cafe_or_404(
+    cafe_id: int,
+    session: AsyncSession,
+) -> Cafe:
+    """Возвращает кафе по ID или выбрасывает 404.
+
+    Args:
+        cafe_id: Идентификатор кафе.
+        session: Асинхронная сессия SQLAlchemy.
+
+    Returns:
+        Объект Cafe.
+
+    Raises:
+        HTTPException: Если кафе не найдено.
+
+    """
+    cafe = await cafe_crud.get_by_id(cafe_id, session)
+
+    if not cafe:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Кафе не найдено',
+        )
+
+    return cafe
+
+
+def can_manage_cafe(user: User, cafe_id: int) -> bool:
+    """Определяет, может ли пользователь управлять указанным кафе.
+
+    Пользователь считается управляющим кафе, если:
+    - его роль позволяет управление кафе;
+    - кафе принадлежит пользователю как менеджеру.
+
+    Args:
+        user: Текущий пользователь.
+        cafe_id: Идентификатор кафе.
+
+    Returns:
+        True, если пользователь может управлять кафе, иначе False.
+
+    """
+    return user.role == UserRole.MANAGER and user.cafe_id == cafe_id
+
+
+def ensure_cafe_is_active(cafe: Cafe) -> None:
+    """Проверяет, что кафе активно.
+
+    Используется для публичного доступа.
+    Если кафе неактивно — доступ запрещён.
+
+    Args:
+        cafe: Объект Cafe.
+
+    Raises:
+        HTTPException: Если кафе неактивно.
+
+    """
+    if not cafe.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Нет доступа к кафе',
+        )
+
+
 class CafeService:
     """Сервис бизнес-логики для работы с кафе.
 
@@ -25,7 +91,7 @@ class CafeService:
     доступа к логике работы с кафе.
     """
 
-    async def get_cafe_by_id_for_user(
+    async def get_cafe_by_id(
         self,
         cafe_id: int,
         user: User,
@@ -56,17 +122,15 @@ class CafeService:
                 - 403: если доступ запрещён.
 
         """
-        cafe = await self.get_cafe_or_404(cafe_id, session)
+        cafe = await get_cafe_or_404(cafe_id, session)
 
         if user.role == UserRole.ADMIN:
             return cafe
 
-        if user.role == UserRole.MANAGER and (
-            cafe.is_active or cafe.id == user.cafe_id
-        ):
+        if can_manage_cafe(user, cafe.id):
             return cafe
 
-        if user.role == UserRole.USER and cafe.is_active:
+        if user.role in {UserRole.USER, UserRole.MANAGER} and cafe.is_active:
             return cafe
 
         raise HTTPException(
@@ -74,7 +138,7 @@ class CafeService:
             detail='Недостаточно прав для доступа к кафе',
         )
 
-    async def get_cafes_for_user(
+    async def get_cafes_list(
         self,
         user: User,
         show_all: bool,
@@ -209,9 +273,9 @@ class CafeService:
                 - 400 / 409: если нарушены бизнес-правила.
 
         """
-        cafe = await self.get_cafe_or_404(cafe_id, session)
+        cafe = await get_cafe_or_404(cafe_id, session)
 
-        if user.role == UserRole.MANAGER and cafe.id != user.cafe_id:
+        if not can_manage_cafe(user, cafe.id) and user.role != UserRole.ADMIN:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail='Недостаточно прав для обновления кафе',
@@ -255,31 +319,49 @@ class CafeService:
 
         return cafe
 
-    async def get_cafe_or_404(
+    async def deactivate_cafe(
         self,
         cafe_id: int,
+        user: User,
         session: AsyncSession,
     ) -> Cafe:
-        """Возвращает кафе по ID или выбрасывает 404.
+        """Деактивирует кафе.
+
+        Выполняет soft delete кафе путём установки `is_active = False`.
+        Кафе не удаляется физически из базы данных.
 
         Args:
             cafe_id: Идентификатор кафе.
+            user: Текущий пользователь.
             session: Асинхронная сессия SQLAlchemy.
 
         Returns:
-            Объект Cafe.
+            Деактивированный объект Cafe.
 
         Raises:
-            HTTPException: Если кафе не найдено.
+            HTTPException:
+                - 404: если кафе не найдено;
+                - 403: если недостаточно прав;
+                - 409: если кафе уже деактивировано.
 
         """
-        cafe = await cafe_crud.get_by_id(cafe_id, session)
+        cafe = await get_cafe_or_404(cafe_id, session)
 
-        if not cafe:
+        if not cafe.is_active:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail='Кафе не найдено',
+                status_code=status.HTTP_409_CONFLICT,
+                detail='Кафе уже деактивировано',
             )
+
+        await cafe_crud.soft_delete(cafe, session)
+
+        logger.info(
+            'Кафе "%s" (id=%s) деактивировано.',
+            cafe.name,
+            cafe.id,
+            extra={'user': f'{user.username} id={user.id}'},
+        )
+
         return cafe
 
     async def _get_and_validate_managers(
@@ -436,47 +518,6 @@ class CafeService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail='Кафе с таким названием и адресом уже существует',
             )
-
-    async def deactivate_cafe(
-        self,
-        cafe_id: int,
-        user: User,
-        session: AsyncSession,
-    ) -> Cafe:
-        """Деактивирует кафе.
-
-        Выполняет soft delete кафе путём установки `is_active = False`.
-        Кафе не удаляется физически из базы данных.
-
-        Args:
-            cafe_id: Идентификатор кафе.
-            user: Текущий пользователь.
-            session: Асинхронная сессия SQLAlchemy.
-
-        Returns:
-            Деактивированный объект Cafe.
-
-        Raises:
-            HTTPException:
-                - 404: если кафе не найдено;
-                - 403: если недостаточно прав;
-                - 409: если кафе уже деактивировано.
-
-        """
-        cafe = await self.get_cafe_or_404(cafe_id, session)
-        if not cafe.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail='Кафе уже деактивировано',
-            )
-        await cafe_crud.soft_delete(cafe, session)
-        logger.info(
-            'Кафе "%s" (id=%s) деактивировано.',
-            cafe.name,
-            cafe.id,
-            extra={'user': f'{user.username} id={user.id}'},
-        )
-        return cafe
 
 
 cafe_service = CafeService()

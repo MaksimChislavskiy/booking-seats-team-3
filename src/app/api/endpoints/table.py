@@ -10,6 +10,7 @@ from app.core.db import get_async_session
 from app.core.responses import (
     FORBIDDEN_RESPONSE,
     NOT_FOUND_RESPONSE,
+    OK_RESPONSE,
     UNAUTHORIZED_RESPONSE,
     VALIDATION_ERROR_RESPONSE,
 )
@@ -30,8 +31,9 @@ router = APIRouter()
     response_model=TableInfo,
     summary='Получение информации о столе в кафе по его ID.',
     description='Для администраторов и менеджеров - все столы, '
-                'для пользователей - только активные.',
+    'для пользователей - только активные.',
     responses={
+        **OK_RESPONSE,
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
@@ -47,7 +49,9 @@ async def get_table(
     """Получение информации о столе с учётом прав пользователя."""
     logger.info(
         'Запрос стола. cafe_id=%d, table_id=%d, user_id=%d, role=%s',
-        cafe_id, table_id, current_active_user.id,
+        cafe_id,
+        table_id,
+        current_active_user.id,
         current_active_user.role.value,
         extra={
             'cafe_id': cafe_id,
@@ -73,7 +77,9 @@ async def get_table(
     if not table:
         logger.warning(
             'Стол не найден. cafe_id=%d, table_id=%d, user_id=%d',
-            cafe_id, table_id, current_active_user.id,
+            cafe_id,
+            table_id,
+            current_active_user.id,
             extra={
                 'cafe_id': cafe_id,
                 'table_id': table_id,
@@ -86,7 +92,9 @@ async def get_table(
         )
     logger.info(
         'Стол возвращён. cafe_id=%d, table_id=%d, is_active=%s',
-        cafe_id, table_id, table.is_active,
+        cafe_id,
+        table_id,
+        table.is_active,
         extra={
             'cafe_id': cafe_id,
             'table_id': table_id,
@@ -119,7 +127,9 @@ async def update_table(
     """Обновление информации о столе (для администраторов и менеджеров)."""
     logger.info(
         'Обновление стола. cafe_id=%d, table_id=%d, data=%s',
-        cafe_id, table_id, update_data.model_dump_json(),
+        cafe_id,
+        table_id,
+        update_data.model_dump_json(),
         extra={
             'cafe_id': cafe_id,
             'table_id': table_id,
@@ -134,7 +144,8 @@ async def update_table(
     ):
         logger.warning(
             'Не авторизованный в этом кафе менеджер. cafe_id=%d, user_id=%d',
-            cafe_id, current_user.id,
+            cafe_id,
+            current_user.id,
             extra={
                 'cafe_id': cafe_id,
                 'user_id': current_user.id,
@@ -145,7 +156,10 @@ async def update_table(
             detail='У вас нет прав управлять столами этого кафе.',
         )
     logger.debug(
-        'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
+        'Кафе найдено. cafe_id=%d',
+        cafe_id,
+        extra={'cafe_id': cafe_id},
+    )
 
     table = await table_crud.get_by_cafe_and_id(
         session=session,
@@ -155,7 +169,8 @@ async def update_table(
     if not table:
         logger.warning(
             'Стол не найден при обновлении. cafe_id=%d, table_id=%d',
-            cafe_id, table_id,
+            cafe_id,
+            table_id,
             extra={'cafe_id': cafe_id, 'table_id': table_id},
         )
         raise HTTPException(
@@ -172,7 +187,8 @@ async def update_table(
         await session.refresh(updated_table, attribute_names=['cafe'])
         logger.info(
             'Стол обновлён. cafe_id=%d, table_id=%d',
-            cafe_id, table_id,
+            cafe_id,
+            table_id,
             extra={'cafe_id': cafe_id, 'table_id': table_id},
         )
         return updated_table
@@ -180,11 +196,14 @@ async def update_table(
     except ValidationError as e:
         logger.error(
             'Ошибка валидации данных. cafe_id=%d, table_id=%d, ошибка=%s',
-            cafe_id, table_id, str(e),
-            extra={'cafe_id': cafe_id,
-                   'table_id': table_id,
-                   'error': e.errors(),
-                   },
+            cafe_id,
+            table_id,
+            str(e),
+            extra={
+                'cafe_id': cafe_id,
+                'table_id': table_id,
+                'error': e.errors(),
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -193,11 +212,14 @@ async def update_table(
     except IntegrityError as e:
         logger.error(
             'Ошибка целостности данных БД. cafe_id=%d, table_id=%d, ошибка=%s',
-            cafe_id, table_id, str(e),
-            extra={'cafe_id': cafe_id,
-                   'table_id': table_id,
-                   'error': repr(e),
-                   },
+            cafe_id,
+            table_id,
+            str(e),
+            extra={
+                'cafe_id': cafe_id,
+                'table_id': table_id,
+                'error': repr(e),
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -206,11 +228,14 @@ async def update_table(
     except OperationalError as e:
         logger.error(
             'Операционная ошибка БД. cafe_id=%d, table_id=%d, ошибка=%s',
-            cafe_id, table_id, str(e),
-            extra={'cafe_id': cafe_id,
-                   'table_id': table_id,
-                   'error': repr(e),
-                   },
+            cafe_id,
+            table_id,
+            str(e),
+            extra={
+                'cafe_id': cafe_id,
+                'table_id': table_id,
+                'error': repr(e),
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -219,11 +244,13 @@ async def update_table(
     except Exception as e:  # Крайний случай — неизвестные ошибки.
         logger.exception(
             'Неожиданная ошибка при обновлении стола. cafe_id=%d, table_id=%d',
-            cafe_id, table_id,
-            extra={'cafe_id': cafe_id,
-                   'table_id': table_id,
-                   'error': repr(e),
-                   },
+            cafe_id,
+            table_id,
+            extra={
+                'cafe_id': cafe_id,
+                'table_id': table_id,
+                'error': repr(e),
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -253,7 +280,8 @@ async def create_table(
     """Новый стол в кафе (для администраторов и менеджеров)."""
     logger.info(
         'Создание стола. cafe_id=%d, data=%s',
-        cafe_id, data.model_dump_json(),
+        cafe_id,
+        data.model_dump_json(),
         extra={
             'cafe_id': cafe_id,
             'create_data': data.model_dump(),
@@ -266,7 +294,8 @@ async def create_table(
     ):
         logger.warning(
             'Не авторизованный в этом кафе менеджер. cafe_id=%d, user_id=%d',
-            cafe_id, current_user.id,
+            cafe_id,
+            current_user.id,
             extra={
                 'cafe_id': cafe_id,
                 'user_id': current_user.id,
@@ -277,17 +306,21 @@ async def create_table(
             detail='Нельзя создавать столы в чужом кафе.',
         )
     logger.debug(
-        'Кафе существует. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id})
+        'Кафе существует. cafe_id=%d',
+        cafe_id,
+        extra={'cafe_id': cafe_id},
+    )
     create_data = data.model_dump()
     create_data['cafe_id'] = cafe_id
     new_table = await table_crud.create(
         obj_in=create_data,
         session=session,
-        )
+    )
     await session.refresh(new_table, attribute_names=['cafe'])
     logger.info(
         'Стол создан. cafe_id=%d, table_id=%d',
-        cafe_id, new_table.id,
+        cafe_id,
+        new_table.id,
         extra={'cafe_id': cafe_id, 'table_id': new_table.id},
     )
     return new_table
@@ -298,7 +331,7 @@ async def create_table(
     response_model=list[TableInfo],
     summary='Получение списка доступных для бронирования столов в кафе.',
     description='Для администраторов и менеджеров - все столы, '
-                'для пользователей - только активные.',
+    'для пользователей - только активные.',
     responses={
         **NOT_FOUND_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
@@ -314,13 +347,16 @@ async def list_tables(
     """Список столов с учётом прав пользователя и выбором полного списка."""
     logger.info(
         'Список столов. cafe_id=%d, show_all=%s, user_id=%d, role=%s',
-        cafe_id, show_all, current_active_user.id,
+        cafe_id,
+        show_all,
+        current_active_user.id,
         current_active_user.role.value,
-        extra={'cafe_id': cafe_id,
-               'show_all': show_all,
-               'user_id': current_active_user.id,
-               'user_role': current_active_user.role.value,
-               },
+        extra={
+            'cafe_id': cafe_id,
+            'show_all': show_all,
+            'user_id': current_active_user.id,
+            'user_role': current_active_user.role.value,
+        },
     )
     cafe = await check_cafe_exists(cafe_id, session)
     admin = current_active_user.role == UserRole.ADMIN
@@ -342,7 +378,8 @@ async def list_tables(
     else:
         logger.debug(
             'Пользователь запрашивает активные столы. cafe_id=%d, role=%s',
-            cafe_id, current_active_user.role.value,
+            cafe_id,
+            current_active_user.role.value,
             extra={
                 'cafe_id': cafe_id,
                 'user_id': current_active_user.id,
@@ -357,10 +394,13 @@ async def list_tables(
         filters=filters,
         session=session,
         options=[selectinload(Table.cafe)],
-        )
+    )
     logger.info(
         'Возвращён список столов. cafe_id=%d, count=%d, show_all=%s, role=%s',
-        cafe_id, len(tables), show_all, current_active_user.role.value,
+        cafe_id,
+        len(tables),
+        show_all,
+        current_active_user.role.value,
         extra={
             'cafe_id': cafe_id,
             'tables_count': len(tables),
@@ -392,7 +432,8 @@ async def delete_table(
     """Мягкое удаление стола (для администраторов и менеджеров)."""
     logger.info(
         'Деактивация стола. cafe_id=%d, table_id=%d',
-        cafe_id, table_id,
+        cafe_id,
+        table_id,
         extra={
             'cafe_id': cafe_id,
             'table_id': table_id,
@@ -406,7 +447,8 @@ async def delete_table(
     ):
         logger.warning(
             'Не авторизованный в этом кафе менеджер. cafe_id=%d, user_id=%d',
-            cafe_id, current_user.id,
+            cafe_id,
+            current_user.id,
             extra={
                 'cafe_id': cafe_id,
                 'user_id': current_user.id,
@@ -417,7 +459,9 @@ async def delete_table(
             detail='Нельзя удалять столы в чужом кафе.',
         )
     logger.debug(
-        'Кафе найдено. cafe_id=%d', cafe_id, extra={'cafe_id': cafe_id},
+        'Кафе найдено. cafe_id=%d',
+        cafe_id,
+        extra={'cafe_id': cafe_id},
     )
 
     table = await table_crud.get_by_cafe_and_id(
@@ -428,7 +472,8 @@ async def delete_table(
     if not table:
         logger.warning(
             'Стол не найден при деактивации. cafe_id=%d, table_id=%d',
-            cafe_id, table_id,
+            cafe_id,
+            table_id,
             extra={'cafe_id': cafe_id, 'table_id': table_id},
         )
         raise HTTPException(
@@ -443,7 +488,8 @@ async def delete_table(
         )
         logger.info(
             'Стол деактивирован. cafe_id=%d, table_id=%d',
-            cafe_id, table_id,
+            cafe_id,
+            table_id,
             extra={'cafe_id': cafe_id, 'table_id': table_id},
         )
         return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -451,7 +497,9 @@ async def delete_table(
     except OperationalError as e:
         logger.error(
             'Операционная ошибка БД. cafe_id=%d, table_id=%d, ошибка=%s',
-            cafe_id, table_id, str(e),
+            cafe_id,
+            table_id,
+            str(e),
             extra={
                 'cafe_id': cafe_id,
                 'table_id': table_id,
@@ -465,7 +513,8 @@ async def delete_table(
     except Exception as e:  # Крайний случай — неизвестные ошибки
         logger.exception(
             'Неожиданная ошибка деактивации стола. cafe_id=%d, table_id=%d',
-            cafe_id, table_id,
+            cafe_id,
+            table_id,
             extra={
                 'cafe_id': cafe_id,
                 'table_id': table_id,

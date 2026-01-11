@@ -5,10 +5,10 @@ from app.core.db import get_async_session
 from app.core.responses import (
     BAD_REQUEST,
     CONFLICT_RESPONSE,
-    CREATED,
+    CREATED_RESPONSE,
     FORBIDDEN_RESPONSE,
     NOT_FOUND_RESPONSE,
-    OK,
+    OK_RESPONSE,
     UNAUTHORIZED_RESPONSE,
     VALIDATION_ERROR_RESPONSE,
 )
@@ -35,12 +35,12 @@ router = APIRouter()
         '- Пользователь видит только активные кафе.'
     ),
     responses={
-        **OK,
+        **OK_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
 )
-async def read_list(
+async def get_cafes_list(
     user: User = Depends(current_active_user),
     show_all: bool = Query(
         False,
@@ -63,7 +63,7 @@ async def read_list(
         Список объектов CafeInfo.
 
     """
-    return await cafe_service.get_cafes_for_user(user, show_all, session)
+    return await cafe_service.get_cafes_list(user, show_all, session)
 
 
 @router.post(
@@ -76,17 +76,16 @@ async def read_list(
         'Доступно только администраторам.'
     ),
     responses={
-        **CREATED,
+        **CREATED_RESPONSE,
         **BAD_REQUEST,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
-    dependencies=[Depends(current_admin)],
 )
-async def create(
+async def create_cafe(
     cafe_in: CafeCreate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_admin),
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Создаёт новое кафе и назначает менеджеров.
@@ -125,7 +124,7 @@ async def create(
         '- Пользователь может получить только активное кафе.'
     ),
     responses={
-        **OK,
+        **OK_RESPONSE,
         **BAD_REQUEST,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
@@ -133,7 +132,7 @@ async def create(
         **VALIDATION_ERROR_RESPONSE,
     },
 )
-async def read_cafe(
+async def get_cafe_by_id(
     cafe_id: int = Path(..., description='ID кафе'),
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
@@ -149,7 +148,7 @@ async def read_cafe(
         Объект CafeInfo.
 
     """
-    return await cafe_service.get_cafe_by_id_for_user(cafe_id, user, session)
+    return await cafe_service.get_cafe_by_id(cafe_id, user, session)
 
 
 @router.patch(
@@ -164,20 +163,19 @@ async def read_cafe(
         '- Обычный пользователь не имеет доступа.\n\n'
     ),
     responses={
-        **OK,
+        **OK_RESPONSE,
         **BAD_REQUEST,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
-    dependencies=[Depends(current_admin_or_manager)],
 )
-async def update(
+async def update_cafe(
     cafe_id: int = Path(..., description='ID кафе'),
     *,
     cafe_in: CafeUpdate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_admin_or_manager),
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Частично обновляет информацию о кафе по его ID.
@@ -209,6 +207,7 @@ async def update(
 
 @router.delete(
     '/{cafe_id}',
+    status_code=status.HTTP_200_OK,
     response_model=CafeInfo,
     summary='Деактивировать кафе по ID',
     description=(
@@ -216,18 +215,17 @@ async def update(
         'Доступно только администраторам.'
     ),
     responses={
-        **OK,
+        **OK_RESPONSE,
         **UNAUTHORIZED_RESPONSE,
         **FORBIDDEN_RESPONSE,
         **NOT_FOUND_RESPONSE,
         **CONFLICT_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
-    dependencies=[Depends(current_admin)],
 )
 async def deactivate_cafe(
     cafe_id: int = Path(..., description='ID кафе'),
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_admin),
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeInfo:
     """Деактивирует кафе по ID.
@@ -244,4 +242,8 @@ async def deactivate_cafe(
         HTTPException: Если кафе не найдено или уже деактивировано.
 
     """
-    return await cafe_service.deactivate_cafe(cafe_id, user, session)
+    return await cafe_service.deactivate_cafe(
+        cafe_id=cafe_id,
+        user=user,
+        session=session,
+    )
