@@ -80,7 +80,7 @@ class BookingCreate(BookingBase, BookingDateValidationMixin):
     cafe_id: int = Field(
         ...,
         description='ID кафе',
- )
+    )
     tables_slots: list[TableSlot] = Field(
         ...,
         min_length=1,

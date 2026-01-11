@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.core.constants import MAX_SEATS_NUMBER, MIN_SEATS_NUMBER
+from app.core.constants import MAX_SEATS_COUNT, MIN_SEATS_COUNT
 from app.schemas.cafe import CafeShortInfo
 
 
@@ -11,8 +11,8 @@ class TableBase(BaseModel):
 
     seats_count: int = Field(
         ...,
-        ge=MIN_SEATS_NUMBER,
-        le=MAX_SEATS_NUMBER,
+        ge=MIN_SEATS_COUNT,
+        le=MAX_SEATS_COUNT,
         title='Количество мест за столом.',
     )
     description: str | None = Field(
@@ -38,8 +38,8 @@ class TableUpdate(BaseModel):
     )
     seats_count: int | None = Field(
         None,
-        ge=MIN_SEATS_NUMBER,
-        le=MAX_SEATS_NUMBER,
+        ge=MIN_SEATS_COUNT,
+        le=MAX_SEATS_COUNT,
         title='Количество мест за столом (опционально)',
     )
     is_active: bool | None = Field(
