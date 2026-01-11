@@ -165,7 +165,7 @@ class SlotService:
             user.role.value,
             extra={'user': f'{user.username} id={user.id}'},
         )
-        
+
         return slots
 
     async def create_slot(
