@@ -48,3 +48,21 @@ async def manager_assigned_to_cafe(
     if count is None:
         return False
     return count > 0
+
+
+async def check_cafe_is_active(
+        cafe: Cafe,
+        admin: bool,
+        current_cafe_manager: bool,
+) -> None:
+    """Проверяет деактивацию кафе."""
+    if cafe.is_active is False and not (current_cafe_manager or admin):
+        logger.warning(
+            'Кафе не найдено. ID=%d',
+            cafe.id,
+            extra={'cafe_id': cafe.id},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f'Кафе {cafe.id} не найдено.',
+        )
