@@ -62,7 +62,7 @@ class TableSlotBooking(Base):
         lazy='selectin',
     )
 
-    __table_args__ = (
+    __table_args__ = (  # FIXME: Кажется неправильная уникальность, уточнить?
         UniqueConstraint(
             'table_id',
             'slot_id',
