@@ -19,7 +19,10 @@ from app.models import Table, User, UserRole
 from app.schemas import TableCreate, TableInfo, TableUpdate
 from app.services.auth import current_active_user, current_admin_or_manager
 from app.validators.table import (
-    check_cafe_exists, check_cafe_is_active, manager_assigned_to_cafe)
+    check_cafe_exists,
+    check_cafe_is_active,
+    manager_assigned_to_cafe,
+    )
 
 logger = logging.getLogger(__name__)
 
