@@ -58,7 +58,7 @@ async def get_table(
         current_active_user.role.value,
         extra={
             'user': f'{current_active_user.username}'
-                    f'id={current_active_user.id}'
+                    f'id={current_active_user.id}',
         },
     )
     cafe = await check_cafe_exists(cafe_id, session)
@@ -74,7 +74,7 @@ async def get_table(
         cafe_id,
         extra={
             'user': f'{current_active_user.username}'
-                    f'id={current_active_user.id}'
+                    f'id={current_active_user.id}',
         },
     )
     show_all = admin or current_cafe_manager
@@ -92,7 +92,7 @@ async def get_table(
             current_active_user.id,
             extra={
                 'user': f'{current_active_user.username}'
-                        f'id={current_active_user.id}'
+                        f'id={current_active_user.id}',
             },
         )
         raise HTTPException(
@@ -106,7 +106,7 @@ async def get_table(
         table.is_active,
         extra={
             'user': f'{current_active_user.username}'
-                    f'id={current_active_user.id}'
+                    f'id={current_active_user.id}',
         },
     )
     return table
@@ -140,7 +140,7 @@ async def update_table(
         update_data.model_dump_json(),
         extra={
             'user': f'{current_user.username}'
-                    f'id={current_user.id}'
+                    f'id={current_user.id}',
         },
     )
 
@@ -155,7 +155,7 @@ async def update_table(
             current_user.id,
             extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
             },
         )
         raise HTTPException(
@@ -167,7 +167,7 @@ async def update_table(
         cafe_id,
         extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
         },
     )
 
@@ -183,7 +183,7 @@ async def update_table(
             table_id,
             extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
             },
         )
         raise HTTPException(
@@ -204,7 +204,7 @@ async def update_table(
             table_id,
             extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
             },
         )
         return updated_table
@@ -217,7 +217,7 @@ async def update_table(
             str(e),
             extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
             },
         )
         raise HTTPException(
@@ -232,7 +232,7 @@ async def update_table(
             str(e),
             extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
             },
         )
         raise HTTPException(
@@ -247,7 +247,7 @@ async def update_table(
             str(e),
             extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
             },
         )
         raise HTTPException(
@@ -282,7 +282,7 @@ async def create_table(
         data.model_dump_json(),
         extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
         },
     )
     await check_cafe_exists(cafe_id, session)
@@ -296,7 +296,7 @@ async def create_table(
             current_user.id,
             extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
             },
         )
         raise HTTPException(
@@ -308,7 +308,7 @@ async def create_table(
         cafe_id,
         extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
         },
     )
     create_data = data.model_dump()
@@ -324,7 +324,7 @@ async def create_table(
         new_table.id,
         extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
         },
     )
     return new_table
@@ -357,7 +357,7 @@ async def list_tables(
         current_active_user.role.value,
         extra={
                 'user': f'{current_active_user.username}'
-                        f'id={current_active_user.id}'
+                        f'id={current_active_user.id}',
         },
     )
     cafe = await check_cafe_exists(cafe_id, session)
@@ -373,7 +373,7 @@ async def list_tables(
         cafe_id,
         extra={
                 'user': f'{current_active_user.username}'
-                        f'id={current_active_user.id}'
+                        f'id={current_active_user.id}',
         },
     )
     can_show_all = admin or current_cafe_manager
@@ -383,7 +383,7 @@ async def list_tables(
             cafe_id,
             extra={
                 'user': f'{current_active_user.username}'
-                        f'id={current_active_user.id}'
+                        f'id={current_active_user.id}',
             },
         )
         filters = [
@@ -396,7 +396,7 @@ async def list_tables(
             current_active_user.role.value,
             extra={
                 'user': f'{current_active_user.username}'
-                        f'id={current_active_user.id}'
+                        f'id={current_active_user.id}',
             },
         )
         filters = [
@@ -416,7 +416,7 @@ async def list_tables(
         current_active_user.role.value,
         extra={
                 'user': f'{current_active_user.username}'
-                        f'id={current_active_user.id}'
+                        f'id={current_active_user.id}',
         },
     )
     return tables
@@ -448,7 +448,7 @@ async def delete_table(
         table_id,
         extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
         },
     )
 
@@ -463,7 +463,7 @@ async def delete_table(
             current_user.id,
             extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
             },
         )
         raise HTTPException(
@@ -475,7 +475,7 @@ async def delete_table(
         cafe_id,
         extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
         },
     )
 
@@ -491,7 +491,7 @@ async def delete_table(
             table_id,
             extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
             },
         )
         raise HTTPException(
@@ -510,7 +510,7 @@ async def delete_table(
             table_id,
             extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
             },
         )
         return deactivated_table
@@ -523,7 +523,7 @@ async def delete_table(
             str(e),
             extra={
                 'user': f'{current_user.username}'
-                        f'id={current_user.id}'
+                        f'id={current_user.id}',
             },
         )
         raise HTTPException(
