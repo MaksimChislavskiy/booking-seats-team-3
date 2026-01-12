@@ -17,8 +17,10 @@ from app.core.db import Base
 from app.models.enum import BookingStatus
 
 if TYPE_CHECKING:
+    from app.models.cafe import Cafe
     from app.models.slot import Slot
     from app.models.table import Table
+    from app.models.user import User
 
 
 class TableSlotBooking(Base):
@@ -60,7 +62,7 @@ class TableSlotBooking(Base):
         lazy='selectin',
     )
 
-    __table_args__ = (
+    __table_args__ = (  # FIXME: Кажется неправильная уникальность, уточнить?
         UniqueConstraint(
             'table_id',
             'slot_id',
@@ -120,6 +122,9 @@ class Booking(Base):
         Date,
         nullable=False,
     )
+
+    user: Mapped['User'] = relationship('User', lazy='selectin')
+    cafe: Mapped['Cafe'] = relationship('Cafe', lazy='selectin')
 
     tables_slots: Mapped[list['TableSlotBooking']] = relationship(
         'TableSlotBooking',

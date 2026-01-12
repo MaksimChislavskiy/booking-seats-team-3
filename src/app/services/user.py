@@ -13,6 +13,34 @@ from app.schemas.user import UserUpdate
 logger = logging.getLogger(__name__)
 
 
+async def get_user_or_404(
+    user_id: int,
+    session: AsyncSession,
+) -> User:
+    """Возвращает пользователя по ID или выбрасывает 404.
+
+    Args:
+        user_id: Идентификатор пользователя.
+        session: Асинхронная сессия SQLAlchemy.
+
+    Returns:
+        Объект User.
+
+    Raises:
+        HTTPException: Если пользователь не найден.
+
+    """
+    user = await user_crud.get_by_id(user_id, session)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Пользователь не найден',
+        )
+
+    return user
+
+
 class UserService:
     """Сервис бизнес-логики пользователей.
 
@@ -64,6 +92,7 @@ class UserService:
             user_in.username,
             role,
         )
+
         self._validate_required_contacts(user_in)
         await self._check_user_uniqueness(user_in, session)
 
@@ -75,10 +104,9 @@ class UserService:
         )
 
         logger.info(
-            'Пользователь успешно создан: user_id=%s, username=%s, role=%s',
-            user.id,
-            user.username,
-            role,
+            'Пользователь успешно создан: %s',
+            user.__repr__(),
+            extra={'user': f'{user.username} id={user.id}'},
         )
 
         return user
