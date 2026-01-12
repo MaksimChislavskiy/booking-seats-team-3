@@ -20,7 +20,6 @@ async def check_cafe_exists(
         logger.warning(
             'Кафе не найдено. ID=%d',
             cafe_id,
-            extra={'cafe_id': cafe_id},
         )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -60,7 +59,6 @@ async def check_cafe_is_active(
         logger.warning(
             'Кафе не найдено. ID=%d',
             cafe.id,
-            extra={'cafe_id': cafe.id},
         )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

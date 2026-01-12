@@ -23,8 +23,8 @@ class CRUDTable(CRUDBase[Table, TableCreate, TableUpdate]):
         """Получение стола по ID для данного кафе."""
         logger.info(
             'Запрос стола. cafe_id=%d, table_id=%d',
-            cafe_id, table_id,
-            extra={'cafe_id': cafe_id, 'table_id': table_id},
+            cafe_id,
+            table_id,
         )
         query = select(Table).where(
             Table.cafe_id == cafe_id,
@@ -49,11 +49,9 @@ class CRUDTable(CRUDBase[Table, TableCreate, TableUpdate]):
         logger.info(
             'Запрос стола с фильтрацией по роли. '
             'cafe_id=%d, table_id=%d, show_all=%s',
-            cafe_id, table_id, show_all,
-            extra={
-                'cafe_id': cafe_id,
-                'table_id': table_id,
-                'show_all': show_all},
+            cafe_id,
+            table_id,
+            show_all,
         )
         query = select(Table).where(
             Table.cafe_id == cafe_id,
@@ -62,19 +60,15 @@ class CRUDTable(CRUDBase[Table, TableCreate, TableUpdate]):
         if not show_all:
             logger.debug(
                 'Фильтрация по is_active=True. cafe_id=%d, table_id=%d',
-                cafe_id, table_id,
-                extra={
-                    'cafe_id': cafe_id,
-                    'table_id': table_id},
+                cafe_id,
+                table_id,
             )
             query = query.where(Table.is_active)
         else:
             logger.debug(
                 'Доступ без фильтрации по is_active. cafe_id=%d, table_id=%d',
-                cafe_id, table_id,
-                extra={
-                    'cafe_id': cafe_id,
-                    'table_id': table_id},
+                cafe_id,
+                table_id,
             )
         query = query.options(selectinload(Table.cafe))
         result = await session.execute(query)

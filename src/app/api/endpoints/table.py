@@ -57,10 +57,8 @@ async def get_table(
         current_active_user.id,
         current_active_user.role.value,
         extra={
-            'cafe_id': cafe_id,
-            'table_id': table_id,
-            'user_id': current_active_user.id,
-            'user_role': current_active_user.role.value,
+            'user': f'{current_active_user.username}'
+                    f'id={current_active_user.id}'
         },
     )
     cafe = await check_cafe_exists(cafe_id, session)
@@ -74,8 +72,11 @@ async def get_table(
     logger.debug(
         'Кафе найдено. cafe_id=%d',
         cafe_id,
-        extra={'cafe_id': cafe_id},
-        )
+        extra={
+            'user': f'{current_active_user.username}'
+                    f'id={current_active_user.id}'
+        },
+    )
     show_all = admin or current_cafe_manager
     table = await table_crud.get_by_cafe_and_id_with_show(
         session=session,
@@ -90,9 +91,8 @@ async def get_table(
             table_id,
             current_active_user.id,
             extra={
-                'cafe_id': cafe_id,
-                'table_id': table_id,
-                'user_id': current_active_user.id,
+                'user': f'{current_active_user.username}'
+                        f'id={current_active_user.id}'
             },
         )
         raise HTTPException(
@@ -105,9 +105,8 @@ async def get_table(
         table_id,
         table.is_active,
         extra={
-            'cafe_id': cafe_id,
-            'table_id': table_id,
-            'is_active': table.is_active,
+            'user': f'{current_active_user.username}'
+                    f'id={current_active_user.id}'
         },
     )
     return table
@@ -140,9 +139,8 @@ async def update_table(
         table_id,
         update_data.model_dump_json(),
         extra={
-            'cafe_id': cafe_id,
-            'table_id': table_id,
-            'update_data': update_data.model_dump(),
+            'user': f'{current_user.username}'
+                    f'id={current_user.id}'
         },
     )
 
@@ -156,8 +154,8 @@ async def update_table(
             cafe_id,
             current_user.id,
             extra={
-                'cafe_id': cafe_id,
-                'user_id': current_user.id,
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
             },
         )
         raise HTTPException(
@@ -167,7 +165,10 @@ async def update_table(
     logger.debug(
         'Кафе найдено. cafe_id=%d',
         cafe_id,
-        extra={'cafe_id': cafe_id},
+        extra={
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
+        },
     )
 
     table = await table_crud.get_by_cafe_and_id(
@@ -180,7 +181,10 @@ async def update_table(
             'Стол не найден при обновлении. cafe_id=%d, table_id=%d',
             cafe_id,
             table_id,
-            extra={'cafe_id': cafe_id, 'table_id': table_id},
+            extra={
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -198,7 +202,10 @@ async def update_table(
             'Стол обновлён. cafe_id=%d, table_id=%d',
             cafe_id,
             table_id,
-            extra={'cafe_id': cafe_id, 'table_id': table_id},
+            extra={
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
+            },
         )
         return updated_table
 
@@ -209,9 +216,8 @@ async def update_table(
             table_id,
             str(e),
             extra={
-                'cafe_id': cafe_id,
-                'table_id': table_id,
-                'error': e.errors(),
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
             },
         )
         raise HTTPException(
@@ -225,9 +231,8 @@ async def update_table(
             table_id,
             str(e),
             extra={
-                'cafe_id': cafe_id,
-                'table_id': table_id,
-                'error': repr(e),
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
             },
         )
         raise HTTPException(
@@ -241,29 +246,13 @@ async def update_table(
             table_id,
             str(e),
             extra={
-                'cafe_id': cafe_id,
-                'table_id': table_id,
-                'error': repr(e),
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
             },
         )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail='Временная ошибка сервиса. Попробуйте позже.',
-        )
-    except Exception as e:  # Крайний случай — неизвестные ошибки.
-        logger.exception(
-            'Неожиданная ошибка при обновлении стола. cafe_id=%d, table_id=%d',
-            cafe_id,
-            table_id,
-            extra={
-                'cafe_id': cafe_id,
-                'table_id': table_id,
-                'error': repr(e),
-            },
-        )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Внутренняя ошибка сервера.',
         )
 
 
@@ -292,8 +281,8 @@ async def create_table(
         cafe_id,
         data.model_dump_json(),
         extra={
-            'cafe_id': cafe_id,
-            'create_data': data.model_dump(),
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
         },
     )
     await check_cafe_exists(cafe_id, session)
@@ -306,8 +295,8 @@ async def create_table(
             cafe_id,
             current_user.id,
             extra={
-                'cafe_id': cafe_id,
-                'user_id': current_user.id,
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
             },
         )
         raise HTTPException(
@@ -317,7 +306,10 @@ async def create_table(
     logger.debug(
         'Кафе существует. cafe_id=%d',
         cafe_id,
-        extra={'cafe_id': cafe_id},
+        extra={
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
+        },
     )
     create_data = data.model_dump()
     create_data['cafe_id'] = cafe_id
@@ -330,7 +322,10 @@ async def create_table(
         'Стол создан. cafe_id=%d, table_id=%d',
         cafe_id,
         new_table.id,
-        extra={'cafe_id': cafe_id, 'table_id': new_table.id},
+        extra={
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
+        },
     )
     return new_table
 
@@ -361,10 +356,8 @@ async def list_tables(
         current_active_user.id,
         current_active_user.role.value,
         extra={
-            'cafe_id': cafe_id,
-            'show_all': show_all,
-            'user_id': current_active_user.id,
-            'user_role': current_active_user.role.value,
+                'user': f'{current_active_user.username}'
+                        f'id={current_active_user.id}'
         },
     )
     cafe = await check_cafe_exists(cafe_id, session)
@@ -378,14 +371,20 @@ async def list_tables(
     logger.debug(
         'Кафе найдено. cafe_id=%d',
         cafe_id,
-        extra={'cafe_id': cafe_id},
-        )
+        extra={
+                'user': f'{current_active_user.username}'
+                        f'id={current_active_user.id}'
+        },
+    )
     can_show_all = admin or current_cafe_manager
     if show_all and can_show_all:
         logger.debug(
             'Администратор/менеджер запрашивает список всех столов cafe_id=%d',
             cafe_id,
-            extra={'cafe_id': cafe_id, 'user_id': current_active_user.id},
+            extra={
+                'user': f'{current_active_user.username}'
+                        f'id={current_active_user.id}'
+            },
         )
         filters = [
             {'field': 'cafe_id', 'op': 'eq', 'value': cafe_id},
@@ -396,9 +395,8 @@ async def list_tables(
             cafe_id,
             current_active_user.role.value,
             extra={
-                'cafe_id': cafe_id,
-                'user_id': current_active_user.id,
-                'user_role': current_active_user.role.value,
+                'user': f'{current_active_user.username}'
+                        f'id={current_active_user.id}'
             },
         )
         filters = [
@@ -417,10 +415,8 @@ async def list_tables(
         show_all,
         current_active_user.role.value,
         extra={
-            'cafe_id': cafe_id,
-            'tables_count': len(tables),
-            'show_all': show_all,
-            'user_role': current_active_user.role.value,
+                'user': f'{current_active_user.username}'
+                        f'id={current_active_user.id}'
         },
     )
     return tables
@@ -451,8 +447,8 @@ async def delete_table(
         cafe_id,
         table_id,
         extra={
-            'cafe_id': cafe_id,
-            'table_id': table_id,
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
         },
     )
 
@@ -466,8 +462,8 @@ async def delete_table(
             cafe_id,
             current_user.id,
             extra={
-                'cafe_id': cafe_id,
-                'user_id': current_user.id,
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
             },
         )
         raise HTTPException(
@@ -477,7 +473,10 @@ async def delete_table(
     logger.debug(
         'Кафе найдено. cafe_id=%d',
         cafe_id,
-        extra={'cafe_id': cafe_id},
+        extra={
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
+        },
     )
 
     table = await table_crud.get_by_cafe_and_id(
@@ -490,7 +489,10 @@ async def delete_table(
             'Стол не найден при деактивации. cafe_id=%d, table_id=%d',
             cafe_id,
             table_id,
-            extra={'cafe_id': cafe_id, 'table_id': table_id},
+            extra={
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -506,7 +508,10 @@ async def delete_table(
             'Стол деактивирован. cafe_id=%d, table_id=%d',
             cafe_id,
             table_id,
-            extra={'cafe_id': cafe_id, 'table_id': table_id},
+            extra={
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
+            },
         )
         return deactivated_table
 
@@ -517,27 +522,11 @@ async def delete_table(
             table_id,
             str(e),
             extra={
-                'cafe_id': cafe_id,
-                'table_id': table_id,
-                'error': repr(e),
+                'user': f'{current_user.username}'
+                        f'id={current_user.id}'
             },
         )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail='Временная ошибка сервиса. Попробуйте позже.',
-        )
-    except Exception as e:  # Крайний случай — неизвестные ошибки
-        logger.exception(
-            'Неожиданная ошибка деактивации стола. cafe_id=%d, table_id=%d',
-            cafe_id,
-            table_id,
-            extra={
-                'cafe_id': cafe_id,
-                'table_id': table_id,
-                'error': repr(e),
-            },
-        )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Внутренняя ошибка сервера.',
         )
