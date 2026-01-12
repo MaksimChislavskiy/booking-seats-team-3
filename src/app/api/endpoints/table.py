@@ -33,8 +33,8 @@ router = APIRouter()
     '/{table_id}',
     response_model=TableInfo,
     summary='Получение информации о столе в кафе по его ID.',
-    description='Для администраторов и менеджеров - все столы, '
-    'для пользователей - только активные.',
+    description='Для администраторов и менеджеров этого кафе - все столы, '
+    'для пользователей и остальных менеджеров - только активные.',
     responses={
         **OK_RESPONSE,
         **FORBIDDEN_RESPONSE,
@@ -428,6 +428,7 @@ async def list_tables(
 
 @router.delete(
     '/{table_id}',
+    response_model=TableInfo,
     dependencies=[Depends(current_admin_or_manager)],
     summary='Мягкое удаление стола (деактивация), для ADMIN и MANAGER.',
     description='Деактивирует стол, устанавливая is_active=False.',
@@ -443,7 +444,7 @@ async def delete_table(
     table_id: int,
     current_user: User = Depends(current_admin_or_manager),
     session: AsyncSession = Depends(get_async_session),
-) -> Response:
+) -> Table:
     """Мягкое удаление стола (для администраторов и менеджеров)."""
     logger.info(
         'Деактивация стола. cafe_id=%d, table_id=%d',
@@ -497,7 +498,7 @@ async def delete_table(
         )
 
     try:
-        await table_crud.soft_delete(
+        deactivated_table = await table_crud.soft_delete(
             db_obj=table,
             session=session,
         )
@@ -507,7 +508,7 @@ async def delete_table(
             table_id,
             extra={'cafe_id': cafe_id, 'table_id': table_id},
         )
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
+        return deactivated_table
 
     except OperationalError as e:
         logger.error(
