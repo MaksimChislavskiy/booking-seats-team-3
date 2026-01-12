@@ -15,6 +15,7 @@ from app.models import User
 from app.schemas import UserCreate, UserInfo, UserUpdate
 from app.services.auth import (
     current_active_user,
+    current_admin,
     current_admin_or_manager,
 )
 from app.services.user import user_service
@@ -166,5 +167,32 @@ async def update_user(
     return await user_service.update_user(
         user_id=user_id,
         user_in=user_in,
+        session=session,
+    )
+
+
+@router.delete(
+    '/{user_id}',
+    status_code=status.HTTP_200_OK,
+    response_model=UserInfo,
+    summary='Деактивировать пользователя',
+    description=(
+        'Деактивирует пользователя путем установки атрибута is_active=False. '
+        'Доступно только администраторам'
+    ),
+    responses={
+        **UNAUTHORIZED_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+    },
+)
+async def deactivate_user(
+    user_id: int,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_admin),
+) -> UserInfo:
+    """Деактивирует пользователя по ID."""
+    return await user_service.deactivate_user(
+        user_id=user_id,
         session=session,
     )

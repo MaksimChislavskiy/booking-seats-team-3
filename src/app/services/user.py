@@ -103,7 +103,6 @@ class UserService:
             user_in: Данные для обновления пользователя.
             session: Асинхронная сессия базы данных.
 
-
         Returns:
             Обновлённый пользователь.
 
@@ -145,6 +144,34 @@ class UserService:
         )
 
         return user
+
+    async def deactivate_user(
+        self,
+        user_id: int,
+        session: AsyncSession,
+    ) -> User:
+        """Деактивирует пользователя (is_active=False)."""
+        db_user = await user_crud.get_by_id(user_id, session)
+        if not db_user:
+            logger.warning(
+                'Деактивация невозможна: пользователь не найден (user_id=%s)',
+                user_id,
+            )
+            raise HTTPException(404, 'Пользователь не найден')
+
+        if not db_user.is_active:
+            logger.info(
+                'Пользователь уже деактивирован (user_id=%s)',
+                user_id,
+            )
+            raise HTTPException(400, 'Пользователь уже деактивирован')
+
+        db_user = await user_crud.soft_deactivate(db_user, session)
+        logger.info(
+            'Пользователь деактивирован: user_id=%s',
+            user_id,
+        )
+        return db_user
 
     @staticmethod
     def _validate_required_contacts(user_in: UserCreate) -> None:

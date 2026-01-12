@@ -1,3 +1,5 @@
+"""CRUD для работы с пользователями."""
+
 from typing import Any
 
 from sqlalchemy import select
@@ -106,6 +108,18 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             ],
             session=session,
         )
+
+    async def soft_deactivate(
+        self,
+        db_obj: User,
+        session: AsyncSession,
+    ) -> User:
+        """Мягкая деактивация пользователя (is_active=False)."""
+        db_obj.is_active = False
+        session.add(db_obj)
+        await session.commit()
+        await session.refresh(db_obj)
+        return db_obj
 
 
 user_crud = CRUDUser(User)
