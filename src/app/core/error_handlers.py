@@ -63,16 +63,26 @@ async def validation_error_handler(
     Переопределяет стандартное поведение FastAPI и возвращает
     унифицированный ответ ErrorResponse вместо дефолтного
     JSON с деталями Pydantic.
+
+    В сообщение об ошибке включено название поля с ошибкой.
     """
-    first_error = exc.errors()[0]
-    message = first_error.get('msg', 'Ошибка валидации данных')
+    errors = exc.errors()
+
+    if not errors:
+        message = "Ошибка валидации данных"
+    else:
+        first_error = errors[0]
+        error_msg = first_error.get('msg', 'Ошибка валидации данных')
+        error_loc = first_error.get('loc', [])
+        field_name = _format_validation_field_path(error_loc)
+        message = f"Ошибка в поле '{field_name}': {error_msg}"
 
     logger.warning(message)
 
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=ErrorResponse(
-            code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             message=message,
         ).model_dump(),
     )
@@ -120,3 +130,37 @@ async def unhandled_exception_handler(
             message='Internal server error',
         ).model_dump(),
     )
+
+
+def _format_validation_field_path(loc: list) -> str:
+    """Форматирует путь к полю из location ошибки валидации.
+
+    Преобразует location в читаемую строку:
+    - ['body', 'user', 'email'] -> 'user.email'
+    - ['body', 'items', 0, 'name'] -> 'items[0].name'
+    - ['query', 'page'] -> 'page'
+    - ['path', 'item_id'] -> 'item_id'
+
+    Args:
+        loc: Список location из ошибки валидации
+
+    Returns:
+        Отформатированный путь к полю
+    """
+    if not loc:
+        return "unknown"
+
+    if len(loc) <= 1:
+        return str(loc[0]) if loc else "unknown"
+
+    parts = []
+    for i, loc_part in enumerate(loc[1:], 1):
+        if isinstance(loc_part, int):
+            parts.append(f"[{loc_part}]")
+        else:
+            if i == 1 or (parts and parts[-1].startswith('[')):
+                parts.append(str(loc_part))
+            else:
+                parts.append(f".{loc_part}")
+
+    return ''.join(parts)
