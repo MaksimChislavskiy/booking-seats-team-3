@@ -1,8 +1,6 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import ValidationError
-from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -57,7 +55,7 @@ async def get_table(
         current_active_user.id,
         current_active_user.role.value,
         extra={
-            'user': f'{current_active_user.username}'
+            'user': f'{current_active_user.username} '
                     f'id={current_active_user.id}',
         },
     )
@@ -73,7 +71,7 @@ async def get_table(
         'Кафе найдено. cafe_id=%d',
         cafe_id,
         extra={
-            'user': f'{current_active_user.username}'
+            'user': f'{current_active_user.username} '
                     f'id={current_active_user.id}',
         },
     )
@@ -91,7 +89,7 @@ async def get_table(
             table_id,
             current_active_user.id,
             extra={
-                'user': f'{current_active_user.username}'
+                'user': f'{current_active_user.username} '
                         f'id={current_active_user.id}',
             },
         )
@@ -105,7 +103,7 @@ async def get_table(
         table_id,
         table.is_active,
         extra={
-            'user': f'{current_active_user.username}'
+            'user': f'{current_active_user.username} '
                     f'id={current_active_user.id}',
         },
     )
@@ -139,7 +137,7 @@ async def update_table(
         table_id,
         update_data.model_dump_json(),
         extra={
-            'user': f'{current_user.username}'
+            'user': f'{current_user.username} '
                     f'id={current_user.id}',
         },
     )
@@ -154,7 +152,7 @@ async def update_table(
             cafe_id,
             current_user.id,
             extra={
-                'user': f'{current_user.username}'
+                'user': f'{current_user.username} '
                         f'id={current_user.id}',
             },
         )
@@ -166,7 +164,7 @@ async def update_table(
         'Кафе найдено. cafe_id=%d',
         cafe_id,
         extra={
-                'user': f'{current_user.username}'
+                'user': f'{current_user.username} '
                         f'id={current_user.id}',
         },
     )
@@ -182,7 +180,7 @@ async def update_table(
             cafe_id,
             table_id,
             extra={
-                'user': f'{current_user.username}'
+                'user': f'{current_user.username} '
                         f'id={current_user.id}',
             },
         )
@@ -191,69 +189,22 @@ async def update_table(
             detail=f'Стол {table_id} не найден.',
         )
 
-    try:
-        updated_table = await table_crud.update(
-            db_obj=table,
-            obj_in=update_data,
-            session=session,
-        )
-        await session.refresh(updated_table, attribute_names=['cafe'])
-        logger.info(
-            'Стол обновлён. cafe_id=%d, table_id=%d',
-            cafe_id,
-            table_id,
-            extra={
-                'user': f'{current_user.username}'
-                        f'id={current_user.id}',
-            },
-        )
-        return updated_table
-
-    except ValidationError as e:
-        logger.error(
-            'Ошибка валидации данных. cafe_id=%d, table_id=%d, ошибка=%s',
-            cafe_id,
-            table_id,
-            str(e),
-            extra={
-                'user': f'{current_user.username}'
-                        f'id={current_user.id}',
-            },
-        )
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail='Некорректные данные. Проверьте поля.',
-        )
-    except IntegrityError as e:
-        logger.error(
-            'Ошибка целостности данных БД. cafe_id=%d, table_id=%d, ошибка=%s',
-            cafe_id,
-            table_id,
-            str(e),
-            extra={
-                'user': f'{current_user.username}'
-                        f'id={current_user.id}',
-            },
-        )
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail='Конфликт данных. Проверьте входные параметры.',
-        )
-    except OperationalError as e:
-        logger.error(
-            'Операционная ошибка БД. cafe_id=%d, table_id=%d, ошибка=%s',
-            cafe_id,
-            table_id,
-            str(e),
-            extra={
-                'user': f'{current_user.username}'
-                        f'id={current_user.id}',
-            },
-        )
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail='Временная ошибка сервиса. Попробуйте позже.',
-        )
+    updated_table = await table_crud.update(
+        db_obj=table,
+        obj_in=update_data,
+        session=session,
+    )
+    await session.refresh(updated_table, attribute_names=['cafe'])
+    logger.info(
+        'Стол обновлён. cafe_id=%d, table_id=%d',
+        cafe_id,
+        table_id,
+        extra={
+            'user': f'{current_user.username} '
+                    f'id={current_user.id}',
+        },
+    )
+    return updated_table
 
 
 @router.post(
@@ -281,7 +232,7 @@ async def create_table(
         cafe_id,
         data.model_dump_json(),
         extra={
-                'user': f'{current_user.username}'
+                'user': f'{current_user.username} '
                         f'id={current_user.id}',
         },
     )
@@ -295,7 +246,7 @@ async def create_table(
             cafe_id,
             current_user.id,
             extra={
-                'user': f'{current_user.username}'
+                'user': f'{current_user.username} '
                         f'id={current_user.id}',
             },
         )
@@ -307,7 +258,7 @@ async def create_table(
         'Кафе существует. cafe_id=%d',
         cafe_id,
         extra={
-                'user': f'{current_user.username}'
+                'user': f'{current_user.username} '
                         f'id={current_user.id}',
         },
     )
@@ -323,7 +274,7 @@ async def create_table(
         cafe_id,
         new_table.id,
         extra={
-                'user': f'{current_user.username}'
+                'user': f'{current_user.username} '
                         f'id={current_user.id}',
         },
     )
@@ -356,7 +307,7 @@ async def list_tables(
         current_active_user.id,
         current_active_user.role.value,
         extra={
-                'user': f'{current_active_user.username}'
+                'user': f'{current_active_user.username} '
                         f'id={current_active_user.id}',
         },
     )
@@ -372,7 +323,7 @@ async def list_tables(
         'Кафе найдено. cafe_id=%d',
         cafe_id,
         extra={
-                'user': f'{current_active_user.username}'
+                'user': f'{current_active_user.username} '
                         f'id={current_active_user.id}',
         },
     )
@@ -382,7 +333,7 @@ async def list_tables(
             'Администратор/менеджер запрашивает список всех столов cafe_id=%d',
             cafe_id,
             extra={
-                'user': f'{current_active_user.username}'
+                'user': f'{current_active_user.username} '
                         f'id={current_active_user.id}',
             },
         )
@@ -395,7 +346,7 @@ async def list_tables(
             cafe_id,
             current_active_user.role.value,
             extra={
-                'user': f'{current_active_user.username}'
+                'user': f'{current_active_user.username} '
                         f'id={current_active_user.id}',
             },
         )
@@ -415,7 +366,7 @@ async def list_tables(
         show_all,
         current_active_user.role.value,
         extra={
-                'user': f'{current_active_user.username}'
+                'user': f'{current_active_user.username} '
                         f'id={current_active_user.id}',
         },
     )
@@ -447,7 +398,7 @@ async def delete_table(
         cafe_id,
         table_id,
         extra={
-                'user': f'{current_user.username}'
+                'user': f'{current_user.username} '
                         f'id={current_user.id}',
         },
     )
@@ -462,7 +413,7 @@ async def delete_table(
             cafe_id,
             current_user.id,
             extra={
-                'user': f'{current_user.username}'
+                'user': f'{current_user.username} '
                         f'id={current_user.id}',
             },
         )
@@ -474,7 +425,7 @@ async def delete_table(
         'Кафе найдено. cafe_id=%d',
         cafe_id,
         extra={
-                'user': f'{current_user.username}'
+                'user': f'{current_user.username} '
                         f'id={current_user.id}',
         },
     )
@@ -490,7 +441,7 @@ async def delete_table(
             cafe_id,
             table_id,
             extra={
-                'user': f'{current_user.username}'
+                'user': f'{current_user.username} '
                         f'id={current_user.id}',
             },
         )
@@ -499,34 +450,17 @@ async def delete_table(
             detail=f'Стол {table_id} не найден.',
         )
 
-    try:
-        deactivated_table = await table_crud.soft_delete(
-            db_obj=table,
-            session=session,
-        )
-        logger.info(
-            'Стол деактивирован. cafe_id=%d, table_id=%d',
-            cafe_id,
-            table_id,
-            extra={
-                'user': f'{current_user.username}'
-                        f'id={current_user.id}',
-            },
-        )
-        return deactivated_table
-
-    except OperationalError as e:
-        logger.error(
-            'Операционная ошибка БД. cafe_id=%d, table_id=%d, ошибка=%s',
-            cafe_id,
-            table_id,
-            str(e),
-            extra={
-                'user': f'{current_user.username}'
-                        f'id={current_user.id}',
-            },
-        )
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail='Временная ошибка сервиса. Попробуйте позже.',
-        )
+    deactivated_table = await table_crud.soft_delete(
+        db_obj=table,
+        session=session,
+    )
+    logger.info(
+        'Стол деактивирован. cafe_id=%d, table_id=%d',
+        cafe_id,
+        table_id,
+        extra={
+            'user': f'{current_user.username} '
+                    f'id={current_user.id}',
+        },
+    )
+    return deactivated_table
