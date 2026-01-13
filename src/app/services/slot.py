@@ -47,8 +47,6 @@ class SlotService:
         имеет доступ только к активным слотам активного кафе.
         - Обычный пользователь имеет доступ только к активным слотам
         активного кафе.
-        - Неавторизованные пользователи не допускаются
-        на уровне эндпоинта.
 
         Args:
             slot_id: Идентификатор временного слота.
@@ -67,7 +65,6 @@ class SlotService:
 
         """
         slot = await self._get_time_slot_or_404(slot_id, cafe_id, session)
-
         cafe = await get_cafe_or_404(cafe_id, session)
 
         if user.role == UserRole.ADMIN:
@@ -123,8 +120,7 @@ class SlotService:
         if user.role == UserRole.ADMIN:
             effective_show_all = show_all
 
-        # FIXME: Упростить проверку
-        elif user.role == UserRole.MANAGER and can_manage_cafe(user, cafe.id):
+        elif can_manage_cafe(user, cafe.id):
             effective_show_all = show_all
 
         else:
