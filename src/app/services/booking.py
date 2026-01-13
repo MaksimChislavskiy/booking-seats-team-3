@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import booking_crud, slot_crud, table_crud
-from app.models import Booking, TableSlotBooking, User, UserRole
+from app.models import Booking, BookingStatus, TableSlotBooking, User, UserRole
 from app.schemas import BookingCreate, BookingUpdate, TableSlot
 from app.services.cafe import (
     can_manage_cafe,
@@ -402,11 +402,7 @@ class BookingService:
 
         """
         booking = await self._get_booking_or_404(booking_id, session)
-
-        if user.role != UserRole.ADMIN and not self._can_update_booking(
-            user,
-            booking,
-        ):
+        if not self._can_update_booking(user, booking):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail='Недостаточно прав',
@@ -505,20 +501,37 @@ class BookingService:
             True — если доступ разрешён, False — если доступ запрещён.
 
         """
-        if user.role == UserRole.ADMIN:
-            return True
-
-        if can_manage_cafe(user, booking.cafe_id):
-            return True
+        self._ensure_booking_can_be_updated(booking)
 
         if (
-            booking.user_id == user.id
-            and booking.is_active
-            and booking.booking_date >= datetime.today().date()
+            user.role == UserRole.ADMIN
+            or can_manage_cafe(user, booking.cafe_id)
+            or booking.user_id == user.id
         ):
             return True
 
         return False
+
+    def _ensure_booking_can_be_updated(
+        self,
+        booking: Booking,
+    ) -> None:
+        """Проверяет, что бронирование допускает изменения.
+
+        Разрешено изменять только бронирования:
+        - с датой не в прошлом;
+        - со статусом PENDING.
+        """
+        if booking.booking_date < datetime.today().date():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Прошедшее бронирование нельзя изменять',
+            )
+        if booking.status != BookingStatus.PENDING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Бронирование в текущем статусе нельзя изменять',
+            )
 
     @staticmethod
     def _validate_booking_date(booking_date: date) -> None:
