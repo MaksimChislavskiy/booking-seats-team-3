@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.cafe import cafe_crud
+from app.crud import cafe_crud
 from app.models import Cafe, User
 
 logger = logging.getLogger(__name__)
