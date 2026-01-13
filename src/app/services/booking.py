@@ -14,6 +14,7 @@ from app.services.cafe import (
     get_cafe_or_404,
 )
 from app.services.user import get_user_or_404
+from app.services.booking_events import on_booking_created
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +182,23 @@ class BookingService:
         booking = await booking_crud.create(
             obj_in=booking_data,
             related={'tables_slots': table_slot_objects},
+            session=session,
+        )
+
+        # TODO: позже лучше считать по слотам
+        remind_at = datetime.combine(
+            booking.booking_date,
+            datetime.min.time(),
+        )
+
+        task_id = on_booking_created(
+            booking_id=booking.id,
+            remind_at=remind_at,
+        )
+
+        await booking_crud.update(
+            db_obj=booking,
+            obj_in={"reminder_task_id": task_id},
             session=session,
         )
 

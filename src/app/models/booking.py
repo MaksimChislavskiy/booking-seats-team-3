@@ -8,6 +8,7 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+    String,
 )
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -121,6 +122,10 @@ class Booking(Base):
     booking_date: Mapped[date] = mapped_column(
         Date,
         nullable=False,
+    )
+    reminder_task_id: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
     )
 
     user: Mapped['User'] = relationship('User', lazy='selectin')

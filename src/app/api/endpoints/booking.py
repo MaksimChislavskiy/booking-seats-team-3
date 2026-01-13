@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
+from app.services.booking_events import on_booking_created
 
 from app.core.db import get_async_session
 from app.core.responses import (
@@ -17,6 +19,7 @@ from app.models import User
 from app.schemas import BookingCreate, BookingInfo, BookingUpdate
 from app.services.auth import current_active_user
 from app.services.booking import booking_service
+from app.services.booking_events import on_booking_created
 
 router = APIRouter()
 
@@ -144,12 +147,29 @@ async def create_booking(
             - 422: ошибка валидации входных данных.
 
     """
-    return await booking_service.create_booking(
+    booking = await booking_service.create_booking(
         booking_in=booking_in,
         user=user,
         session=session,
     )
 
+    remind_at = datetime.combine(
+        booking.booking_date,
+        datetime.min.time(),
+    )
+
+    task_id = on_booking_created(
+        booking_id=booking.id,
+        remind_at=remind_at,
+    )
+
+    await booking_crud.update(
+        db_obj=booking,
+        obj_in={"reminder_task_id": task_id},
+        session=session,
+    )
+
+    return BookingInfo.model_validate(booking)
 
 # @router.get(
 #     '/{booking_id}',
