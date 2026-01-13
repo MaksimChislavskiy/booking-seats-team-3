@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import booking_crud, slot_crud, table_crud
 from app.models import Booking, TableSlotBooking, User, UserRole
-from app.schemas import BookingCreate, TableSlot
+from app.schemas import BookingCreate, BookingUpdate, TableSlot
 from app.services.cafe import (
     can_manage_cafe,
     ensure_cafe_is_active,
@@ -19,6 +19,70 @@ logger = logging.getLogger(__name__)
 
 
 class BookingService:
+    """Сервис бизнес-логики для управления бронированиями.
+
+    Инкапсулирует все правила и проверки, связанные с бронированиями:
+    - создание, чтение, обновление и деактивацию бронирований;
+    - проверку прав доступа пользователей;
+    - валидацию бронирований;
+    - контроль за созданием и обновлением бронирований.
+
+    Используется API-эндпоинтами как единственная точка доступа
+    к бизнес-логике работы с бронированиями.
+    """
+
+    async def get_booking_by_id(
+        self,
+        booking_id: int,
+        user: User,
+        session: AsyncSession,
+    ) -> Booking:
+        """Возвращает бронирование по ID с учётом прав доступа пользователя.
+
+        Метод выполняет следующие шаги:
+        - Получает бронирование по идентификатору или выбрасывает 404;
+        - Проверяет, имеет ли пользователь право просматривать бронирование;
+        - Возвращает бронирование при наличии доступа.
+
+        Правила доступа:
+        - Администратор может просматривать любое бронирование;
+        - Менеджер может просматривать бронирования кафе, которым он управляет;
+        - Пользователь имеет доступ только к собственным бронированиям.
+
+        Args:
+            booking_id: Идентификатор бронирования.
+            user: Текущий авторизованный пользователь.
+            session: Асинхронная SQLAlchemy-сессия.
+
+        Returns:
+            Объект Booking.
+
+        Raises:
+            HTTPException: Если бронирование не существует,
+                    или пользователь не имеет к нему доступа.
+
+        """
+        booking = await self._get_booking_or_404(booking_id, session)
+
+        logger.info(
+            'Запрошено бронирование: %s',
+            booking.__repr__(),
+            extra={'user': f'{user.username} id={user.id}'},
+        )
+
+        if not self._can_view_booking(user, booking):
+            logger.warning(
+                'Попытка доступа к бронированию без прав: %s',
+                booking.__repr__(),
+                extra={'user': f'{user.username} id={user.id}'},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Бронирование не найдено',
+            )
+
+        return booking
+
     async def get_bookings_list(
         self,
         show_all: bool,
@@ -115,7 +179,18 @@ class BookingService:
                 'value': True,
             })
 
-        return await booking_crud.get_multi(filters=filters, session=session)
+        bookings = await booking_crud.get_multi(
+            filters=filters,
+            session=session,
+        )
+
+        logger.info(
+            'Получен список бронирований: count=%s',
+            len(bookings),
+            extra={'user': f'{current_user.username} id={current_user.id}'},
+        )
+
+        return bookings
 
     async def create_booking(
         self,
@@ -191,6 +266,259 @@ class BookingService:
         )
 
         return booking
+
+    async def update_booking(
+        self,
+        booking_id: int,
+        booking_in: BookingUpdate,
+        user: User,
+        session: AsyncSession,
+    ) -> Booking:
+        """Обновляет бронирование с учётом прав доступа пользователя.
+
+        Последовательно выполняет:
+        - Получает бронирование по ID или выбрасывает 404;
+        - Проверяет, имеет ли пользователь право обновлять данное бронирование;
+        - При изменении кафе проверяет его существование и активность;
+        - Валидирует дату бронирования;
+        - Проверяет отсутствие дубликатов связок стол–слот.
+        - Проверяет существование и принадлежность столов и слотов кафе.
+        - Проверяет отсутствие конфликтов, исключая текущее бронирование.
+        - Обновляет поля бронирования.
+        - При передаче новых связок стол–слот полностью заменяет их
+                            (старые связи удаляются, новые создаются).
+
+        Правила доступа:
+        - Администратор может обновлять любое бронирование;
+        - Менеджер может обновлять бронирования кафе, которым он управляет;
+        - Пользователь может обновлять только собственные бронирования,
+                    если они активны и дата бронирования не в прошлом.
+
+        Args:
+            booking_id: Идентификатор бронирования.
+            booking_in: Данные для обновления бронирования.
+            user: Текущий авторизованный пользователь.
+            session: Асинхронная SQLAlchemy-сессия.
+
+        Returns:
+            Обновлённый объект Booking.
+
+        Raises:
+            HTTPException:
+                - 400: некорректные данные (дата, столы, слоты);
+                - 404: бронирование не найдено или доступ запрещён;
+                - 409: найдено конфликтующее бронирование.
+
+        """
+        booking = await self._get_booking_or_404(booking_id, session)
+
+        if not self._can_update_booking(user, booking):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Бронирование не найдено',
+            )
+
+        logger.info(
+            'Начато обновление бронирования: %s',
+            booking.__repr__(),
+            extra={'user': f'{user.username} id={user.id}'},
+        )
+
+        cafe_id = booking_in.cafe_id or booking.cafe_id
+        booking_date = booking_in.booking_date or booking.booking_date
+        tables_slots = booking_in.tables_slots or booking.tables_slots
+
+        if booking_in.cafe_id is not None:
+            cafe = await get_cafe_or_404(booking_in.cafe_id, session)
+            ensure_cafe_is_active(cafe)
+
+        self._validate_booking_date(booking_date=booking_date)
+
+        self._validate_no_duplicate_table_slots(tables_slots=tables_slots)
+
+        await self._validate_tables_slots(
+            cafe_id=cafe_id,
+            tables_slots=tables_slots,
+            session=session,
+        )
+
+        await self._ensure_booking_available(
+            cafe_id=cafe_id,
+            booking_date=booking_date,
+            tables_slots=tables_slots,
+            exclude_booking_id=booking.id,
+            session=session,
+        )
+
+        update_data = booking_in.model_dump(exclude_unset=True)
+        booking = await booking_crud.update(
+            db_obj=booking,
+            obj_in=update_data,
+            session=session,
+        )
+        if booking_in.tables_slots is not None:
+            await booking_crud.replace_tables_slots(
+                booking_id=booking.id,
+                tables_slots=self._build_table_slot_bookings(
+                    booking_in.tables_slots,
+                ),
+                session=session,
+            )
+            await session.refresh(booking)
+
+        logger.info(
+            'Обновлено бронирование: %s',
+            booking.__repr__(),
+            extra={'user': f'{user.username} id={user.id}'},
+        )
+
+        return booking
+
+    async def deactivate_booking(
+        self,
+        booking_id: int,
+        user: User,
+        session: AsyncSession,
+    ) -> Booking:
+        """Деактивирует бронирование.
+
+        Выполняет soft delete бронирования путём установки `is_active = False`.
+        Бронирование не удаляется физически из базы данных.
+        Доступно автору бронирования.
+
+        Args:
+            booking_id: Идентификатор бронирования.
+            user: Текущий пользователь.
+            session: Асинхронная сессия SQLAlchemy.
+
+        Returns:
+            Деактивированный объект Booking.
+
+        Raises:
+            HTTPException:
+                - 404: если бронирование не найдено;
+                - 403: если у пользователя нет прав;
+                - 409: если бронирование уже деактивировано.
+
+        """
+        booking = await self._get_booking_or_404(booking_id, session)
+
+        if user.role != UserRole.ADMIN and not self._can_update_booking(
+            user,
+            booking,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='Недостаточно прав',
+            )
+
+        if not booking.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail='Бронирование уже деактивировано',
+            )
+
+        booking = await booking_crud.soft_delete(booking, session)
+
+        logger.info(
+            'Бронирование деактивировано: %s',
+            booking.__repr__(),
+            extra={'user': f'{user.username} id={user.id}'},
+        )
+
+        return booking
+
+    async def _get_booking_or_404(
+        self,
+        booking_id: int,
+        session: AsyncSession,
+    ) -> Booking:
+        """Возвращает бронирование по ID или выбрасывает 404.
+
+        Args:
+            booking_id: Идентификатор бронирования.
+            session: Асинхронная сессия SQLAlchemy.
+
+        Returns:
+            Объект Booking.
+
+        Raises:
+            HTTPException: Если бронирование не найдено.
+
+        """
+        booking = await booking_crud.get_by_id(
+            obj_id=booking_id,
+            session=session,
+        )
+        if not booking:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Бронирование не найдено',
+            )
+
+        logger.debug('Найдено бронирование: %s', booking.__repr__())
+
+        return booking
+
+    def _can_view_booking(self, user: User, booking: Booking) -> bool:
+        """Проверяет, имеет ли пользователь право просматривать бронирование.
+
+        Правила:
+        - Администратор имеет доступ ко всем бронированиям;
+        - Менеджер имеет доступ к бронированиям кафе, которым он управляет;
+        - Пользователь имеет доступ только к собственным бронированиям.
+
+        Args:
+            user: Текущий пользователь.
+            booking: Проверяемое бронирование.
+
+        Returns:
+            True — если доступ разрешён, False — если доступ запрещён.
+
+        """
+        if user.role == UserRole.ADMIN:
+            return True
+
+        if can_manage_cafe(user, booking.cafe_id):
+            return True
+
+        if booking.user_id == user.id:
+            return True
+
+        return False
+
+    def _can_update_booking(self, user: User, booking: Booking) -> bool:
+        """Проверяет, имеет ли пользователь право обновлять бронирование.
+
+        Правила:
+        - Администратор имеет право обновлять любое бронирование;
+        - Менеджер имеет право обновлять бронирования кафе,
+                                    которым он управляет;
+        - Пользователь имеет право обновлять только собственные бронирования,
+                            если они активны и дата бронирования не в прошлом.
+
+        Args:
+            user: Текущий пользователь.
+            booking: Проверяемое бронирование.
+
+        Returns:
+            True — если доступ разрешён, False — если доступ запрещён.
+
+        """
+        if user.role == UserRole.ADMIN:
+            return True
+
+        if can_manage_cafe(user, booking.cafe_id):
+            return True
+
+        if (
+            booking.user_id == user.id
+            and booking.is_active
+            and booking.booking_date >= datetime.today().date()
+        ):
+            return True
+
+        return False
 
     @staticmethod
     def _validate_booking_date(booking_date: date) -> None:
