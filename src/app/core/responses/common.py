@@ -8,7 +8,7 @@ CREATED_RESPONSE = {
     201: {'description': 'Успешно'},
 }
 
-BAD_REQUEST = {
+BAD_REQUEST_RESPONSE = {
     400: {
         'model': ErrorResponse,
         'description': 'Ошибка в параметрах запроса',

@@ -1,7 +1,7 @@
 from sqlalchemy import CheckConstraint, ForeignKey, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.constants import MAX_SEATS_NUMBER, MIN_SEATS_NUMBER
+from app.core.constants import MAX_SEATS_COUNT, MIN_SEATS_COUNT
 from app.core.db import Base
 from app.models.cafe import Cafe
 
@@ -34,8 +34,8 @@ class Table(Base):
 
     __table_args__ = (
         CheckConstraint(
-            f'seat_number BETWEEN {MIN_SEATS_NUMBER} AND {MAX_SEATS_NUMBER}',
-            name='check_seat_number_range',
+            f'seats_count BETWEEN {MIN_SEATS_COUNT} AND {MAX_SEATS_COUNT}',
+            name='check_seats_count_range',
         ),
     )
 
