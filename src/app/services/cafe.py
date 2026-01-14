@@ -144,37 +144,44 @@ class CafeService:
         show_all: bool,
         session: AsyncSession,
     ) -> list[Cafe]:
-        """Возвращает список кафе с учётом роли пользователя.
+        """Возвращает список кафе с учётом роли пользователя и флага show_all.
 
-        Правила:
-        - ADMIN:
-            * может получить все кафе;
-            * `show_all` управляет показом неактивных кафе.
-        - MANAGER:
-            * видит все активные кафе;
-            * видит своё кафе независимо от статуса.
-        - USER:
-            * видит только активные кафе.
+        Правила доступа:
+        - Администратор: при `show_all=True` — возвращаются все кафе,
+                    при `show_all=False` — возвращаются только активные кафе.
+        - Менеджер: всегда видит все активные кафе и при `show_all=True`
+                        дополнительно видит своё кафе, даже если оно неактивно.
+        - Пользователь: видит только активные кафе, независимо от `show_all`.
 
         Args:
             user: Текущий аутентифицированный пользователь.
-            show_all: Флаг показа неактивных кафе (учитывается
-                только для администратора).
+            show_all: Флаг показа неактивных кафе.
             session: Асинхронная сессия SQLAlchemy.
 
         Returns:
-            Список объектов Cafe, доступных пользователю
-            в соответствии с его ролью.
+            Список объектов Cafe.
 
         """
         if user.role == UserRole.ADMIN:
-            return await cafe_crud.get_cafes(show_all, session=session)
+            if show_all:
+                return await cafe_crud.get_cafes(session=session)
+            return await cafe_crud.get_active_cafes(session=session)
 
         if user.role == UserRole.MANAGER:
-            return await cafe_crud.get_active_and_own_cafes(
-                cafe_id=user.cafe_id,
+            cafes = await cafe_crud.get_active_cafes(session=session)
+
+            if not show_all or user.cafe_id is None:
+                return cafes
+
+            own_cafe = await cafe_crud.get_by_id(
+                obj_id=user.cafe_id,
                 session=session,
             )
+
+            if own_cafe and not own_cafe.is_active:
+                cafes.append(own_cafe)
+
+            return cafes
 
         return await cafe_crud.get_active_cafes(session=session)
 
