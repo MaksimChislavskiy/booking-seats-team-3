@@ -14,6 +14,8 @@ from app.services.token import _decode_jwt
 
 bearer_scheme = HTTPBearer()
 
+optional_bearer_scheme = HTTPBearer(auto_error=False)
+
 
 async def authenticate_user(
     login: str,
@@ -35,17 +37,61 @@ async def authenticate_user(
         Объект User при успешной аутентификации или None.
 
     """
-    user = await user_crud.get_by_email(
-        email=login,
-        session=session,
-    )
+    user = await user_crud.get_by_email(email=login, session=session)
     if not user:
-        user = await user_crud.get_by_phone(
-            phone=login,
-            session=session,
-        )
+        user = await user_crud.get_by_phone(phone=login, session=session)
+
     if not user or not verify_password(password, user.password_hash):
         return None
+    return user
+
+
+async def get_user_from_token(
+    token: str,
+    session: AsyncSession,
+) -> User:
+    """Извлекает пользователя из access-токена.
+
+    Выполняет полную валидацию JWT и загрузку пользователя:
+    - декодирует токен;
+    - извлекает идентификатор пользователя (`sub`);
+    - проверяет корректность и тип идентификатора;
+    - загружает пользователя из базы данных.
+
+    Используется как внутренняя функция для dependency,
+    требующих строгой или optional-аутентификации.
+
+    Args:
+        token: Access-токен в формате JWT.
+        session: Асинхронная сессия базы данных.
+
+    Returns:
+        Объект пользователя, соответствующий токену.
+
+    Raises:
+        HTTPException: 401, если токен невалиден, истёк,
+            содержит некорректные данные или пользователь не найден.
+
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail='Ошибка аутентификации',
+        headers={'WWW-Authenticate': 'Bearer'},
+    )
+
+    try:
+        payload = _decode_jwt(token)
+        user_id_str: str | None = payload.get('sub')
+        if user_id_str is None:
+            raise credentials_exception
+        user_id = int(user_id_str)
+    except (InvalidTokenError, ValueError):
+        raise credentials_exception
+
+    user = await user_crud.get_by_id(user_id, session)
+    if not user:
+        raise credentials_exception
+
     return user
 
 
@@ -67,31 +113,55 @@ async def get_current_user(
         session: Асинхронная сессия базы данных.
 
     Returns:
-        Текущий пользователь.
+        Текущий аутентифицированный пользователь.
 
     Raises:
         HTTPException: 401, если токен невалиден, истёк
-            или пользователь не найден.
+                            или пользователь не найден.
 
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='Ошибка аутентификации',
-        headers={'WWW-Authenticate': 'Bearer'},
+    return await get_user_from_token(
+        token=credentials.credentials,
+        session=session,
     )
-    try:
-        payload = _decode_jwt(credentials.credentials)
-        user_id_str: str | None = payload.get('sub')
-        if user_id_str is None:
-            raise credentials_exception
-        user_id = int(user_id_str)
-    except (InvalidTokenError, ValueError):
-        raise credentials_exception
 
-    user = await user_crud.get_by_id(user_id, session)
-    if not user:
-        raise credentials_exception
-    return user
+
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(
+        optional_bearer_scheme,
+    ),
+    session: AsyncSession = Depends(get_async_session),
+) -> User | None:
+    """Возвращает текущего пользователя, если токен передан.
+
+    Поведение функции:
+    - если токен отсутствует — возвращает None;
+    - если токен передан — выполняет полную валидацию
+                            и загружает пользователя;
+    - если токен невалиден — выбрасывает ошибку аутентификации.
+
+    Используется при регистрации, где аутентификация необязательна,
+    но при наличии токена он обязан быть корректным.
+
+    Args:
+        credentials: Учетные данные из заголовка Authorization или None.
+        session: Асинхронная сессия базы данных.
+
+    Returns:
+        Пользователь, соответствующий токену, либо None.
+
+    Raises:
+        HTTPException: 401, если токен передан, но невалиден
+                                или пользователь не найден.
+
+    """
+    if credentials is None:
+        return None
+
+    return await get_user_from_token(
+        token=credentials.credentials,
+        session=session,
+    )
 
 
 async def get_current_active_user(
@@ -154,6 +224,41 @@ def require_roles(*roles: UserRole) -> Callable[..., User]:
     return dependency
 
 
+async def can_create_user(
+    current_user: User | None = Depends(get_current_user_optional),
+) -> None:
+    """Проверяет право на создание нового пользователя.
+
+    Разрешает создание пользователя в следующих случаях:
+    - пользователь не авторизован (регистрация);
+    - пользователь авторизован и имеет роль ADMIN или MANAGER.
+
+    Запрещает создание пользователя авторизованному пользователю с ролью USER.
+
+    Args:
+        current_user: Текущий пользователь или None,
+                    если запрос выполнен без токена.
+
+    Raises:
+        HTTPException: 403, если авторизованный пользователь
+            не имеет прав на создание нового пользователя.
+
+    """
+    if current_user is None:
+        return
+
+    if current_user.role in {UserRole.ADMIN, UserRole.MANAGER}:
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=(
+            'Авторизованный пользователь не может создать нового пользователя'
+        ),
+    )
+
+
 current_active_user = get_current_active_user
 current_admin = require_roles(UserRole.ADMIN)
 current_admin_or_manager = require_roles(UserRole.ADMIN, UserRole.MANAGER)
+can_create_user = can_create_user
