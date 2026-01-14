@@ -78,7 +78,7 @@ class SlotService:
         if user.role == UserRole.MANAGER:
             if can_manage_cafe(user, cafe.id):
                 logger.info(
-                    'Получен слот менеджером своего кафе: %s',
+                    'Получен слот менеджером кафе: %s',
                     slot.__repr__(),
                     extra={'user': f'{user.username} id={user.id}'},
                 )
@@ -86,7 +86,7 @@ class SlotService:
 
             self._ensure_slot_is_active(slot, cafe)
             logger.info(
-                'Получен слот менеджером чужого кафе: %s',
+                'Получен слот пользователем: %s',
                 slot.__repr__(),
                 extra={'user': f'{user.username} id={user.id}'},
             )
@@ -153,13 +153,9 @@ class SlotService:
             session=session,
         )
         logger.info(
-            'Получен список слотов для кафе %s: '
-            'количество=%s, show_all=%s, '
-            'роль_пользователя=%s',
+            'Получен список слотов для кафе %s: количество=%s',
             cafe_id,
             len(slots),
-            effective_show_all,
-            user.role.value,
             extra={'user': f'{user.username} id={user.id}'},
         )
 
