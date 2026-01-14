@@ -1,11 +1,7 @@
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import (
-    ForeignKey,
-    String,
-    UniqueConstraint,
-)
+from sqlalchemy import String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -60,8 +56,8 @@ class Cafe(Base):
     )
     photo_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
-        ForeignKey('media.id', ondelete='RESTRICT'),
         nullable=True,
+        comment='Идентификатор изображения в файловой системе',
     )
 
     managers: Mapped[list['User']] = relationship(
