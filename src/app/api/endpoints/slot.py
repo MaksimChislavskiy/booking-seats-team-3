@@ -286,7 +286,7 @@ async def deactivate_time_slot(
         HTTPException: Если слот не найден или уже деактивирован.
 
     """
-    await slot_service.deactivate_slot(
+    return await slot_service.deactivate_slot(
         cafe_id=cafe_id,
         slot_id=slot_id,
         user=user,

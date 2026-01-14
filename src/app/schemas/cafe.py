@@ -42,7 +42,7 @@ class CafeBase(BaseModel):
         description='Описание кафе',
     )
     photo_id: UUID | None = Field(
-        None,
+        ...,
         description='UUID фотографии кафе',
     )
 

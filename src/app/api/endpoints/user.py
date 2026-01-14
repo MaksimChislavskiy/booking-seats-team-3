@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
 from app.core.exceptions import UserNotFoundError
 from app.core.responses import (
+    CONFLICT_RESPONSE,
     FORBIDDEN_RESPONSE,
     NOT_FOUND_RESPONSE,
+    OK_RESPONSE,
     UNAUTHORIZED_RESPONSE,
     USER_CONFLICT_RESPONSE,
     VALIDATION_ERROR_RESPONSE,
@@ -14,7 +16,9 @@ from app.crud.user import user_crud
 from app.models import User
 from app.schemas import UserCreate, UserInfo, UserUpdate
 from app.services.auth import (
+    can_create_user,
     current_active_user,
+    current_admin,
     current_admin_or_manager,
 )
 from app.services.user import user_service
@@ -52,6 +56,7 @@ async def get_users_list(
         **USER_CONFLICT_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
+    dependencies=[Depends(can_create_user)],
 )
 async def create_user(
     user_in: UserCreate,
@@ -166,5 +171,51 @@ async def update_user(
     return await user_service.update_user(
         user_id=user_id,
         user_in=user_in,
+        session=session,
+    )
+
+
+@router.delete(
+    '/{user_id}',
+    status_code=status.HTTP_200_OK,
+    response_model=UserInfo,
+    summary='Деактивировать пользователя по ID',
+    description=(
+        'Деактивирует пользователя путем установки атрибута `is_active=False`.'
+        ' Доступно только администраторам.'
+    ),
+    responses={
+        **OK_RESPONSE,
+        **UNAUTHORIZED_RESPONSE,
+        **FORBIDDEN_RESPONSE,
+        **NOT_FOUND_RESPONSE,
+        **CONFLICT_RESPONSE,
+        **VALIDATION_ERROR_RESPONSE,
+    },
+)
+async def deactivate_user(
+    user_id: int = Path(..., description='ID пользователя'),
+    current_user: User = Depends(current_admin),
+    session: AsyncSession = Depends(get_async_session),
+) -> UserInfo:
+    """Деактивирует пользователя по ID.
+
+    Доступно только администраторам.
+
+    Args:
+        user_id: Идентификатор пользователя для деактивации.
+        current_user: Текущий аутентифицированный пользователь.
+        session: Асинхронная сессия SQLAlchemy.
+
+    Returns:
+        Объект с обновленной информацией о пользователя.
+
+    Raises:
+        HTTPException: Если пользователь не найден или уже деактивирован.
+
+    """
+    return await user_service.deactivate_user(
+        user_id=user_id,
+        current_user=current_user,
         session=session,
     )

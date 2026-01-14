@@ -5,9 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
 from app.models import Slot
+from app.schemas import TimeSlotCreate, TimeSlotUpdate
 
 
-class CRUDSlot(CRUDBase):
+class CRUDSlot(CRUDBase[Slot, TimeSlotCreate, TimeSlotUpdate]):
     """CRUD-операции для модели Slot.
 
     Класс инкапсулирует все операции чтения и записи временных слотов

@@ -13,6 +13,38 @@ from app.schemas.user import UserUpdate
 logger = logging.getLogger(__name__)
 
 
+async def get_user_or_404(
+    user_id: int,
+    session: AsyncSession,
+) -> User:
+    """Возвращает пользователя по ID или выбрасывает 404.
+
+    Args:
+        user_id: Идентификатор пользователя.
+        session: Асинхронная сессия SQLAlchemy.
+
+    Returns:
+        Объект User.
+
+    Raises:
+        HTTPException: Если пользователь не найден.
+
+    """
+    user = await user_crud.get_by_id(user_id, session)
+
+    if not user:
+        logger.warning(
+            'Пользователь не найден (user_id=%s)',
+            user_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Пользователь не найден',
+        )
+
+    return user
+
+
 class UserService:
     """Сервис бизнес-логики пользователей.
 
@@ -148,6 +180,53 @@ class UserService:
             # а здесь нужно логировать КОГО обновили
             # В extra должен быть текущий пользователь (кто выполняет операцию)
             # но его здесь нет в методе update_user!
+        )
+
+        return user
+
+    async def deactivate_user(
+        self,
+        *,
+        user_id: int,
+        current_user: User,
+        session: AsyncSession,
+    ) -> User:
+        """Деактивирует пользователя (soft delete).
+
+        Устанавливает флаг is_active = False без физического удаления записи.
+
+        Доступно только администраторам.
+
+        Args:
+            user_id: Идентификатор пользователя для деактивации.
+            current_user: Текущий пользователь (должен быть администратором).
+            session: Асинхронная сессия SQLAlchemy.
+
+        Returns:
+            Деактивированный объект User.
+
+        Raises:
+            HTTPException:
+                - 404, если пользователь не найден.
+                - 403, если у пользователя нет прав;
+                - 409, если пользователь уже деактивирован.
+
+
+        """
+        user = await get_user_or_404(user_id, session)
+
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail='Пользователь уже деактивирован',
+            )
+
+        user = await user_crud.soft_delete(user, session)
+
+        logger.info(
+            'Пользователь деактивирован: %s.',
+            user.__repr__(),
+            extra={'user': f'{current_user.username} id={current_user.id}'},
         )
 
         return user
