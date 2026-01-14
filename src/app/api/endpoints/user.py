@@ -14,6 +14,7 @@ from app.crud.user import user_crud
 from app.models import User
 from app.schemas import UserCreate, UserInfo, UserUpdate
 from app.services.auth import (
+    can_create_user,
     current_active_user,
     current_admin_or_manager,
 )
@@ -52,6 +53,7 @@ async def get_users_list(
         **USER_CONFLICT_RESPONSE,
         **VALIDATION_ERROR_RESPONSE,
     },
+    dependencies=[Depends(can_create_user)],
 )
 async def create_user(
     user_in: UserCreate,
