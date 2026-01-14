@@ -30,6 +30,14 @@ services:
       timeout: 10s
       retries: 5
     restart: unless-stopped
+
+  redis:
+    container_name: cafe-redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   backend:
     container_name: cafe-back
     build:
@@ -42,7 +50,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
+
   gateway:
     image: nginx:1.25-alpine
     volumes:

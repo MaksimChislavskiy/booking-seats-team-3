@@ -62,7 +62,7 @@ class TableSlotBooking(Base):
         lazy='selectin',
     )
 
-    __table_args__ = (
+    __table_args__ = (  # FIXME: Кажется неправильная уникальность, уточнить?
         UniqueConstraint(
             'table_id',
             'slot_id',
@@ -122,6 +122,13 @@ class Booking(Base):
         Date,
         nullable=False,
     )
+    reminder_task_id: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
+    user: Mapped['User'] = relationship('User', lazy='selectin')
+    cafe: Mapped['Cafe'] = relationship('Cafe', lazy='selectin')
 
     user: Mapped['User'] = relationship('User', lazy='selectin')
     cafe: Mapped['Cafe'] = relationship('Cafe', lazy='selectin')

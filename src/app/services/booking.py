@@ -8,6 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.crud import booking_crud, slot_crud, table_crud
 from app.models import Booking, BookingStatus, TableSlotBooking, User, UserRole
 from app.schemas import BookingCreate, BookingUpdate, TableSlot
+from app.services.booking_events import (
+    on_booking_canceled,
+    on_booking_created,
+    on_booking_updated,
+)
 from app.services.cafe import (
     can_manage_cafe,
     ensure_cafe_is_active,
@@ -259,6 +264,22 @@ class BookingService:
             session=session,
         )
 
+        remind_at = datetime.combine(
+            booking.booking_date,
+            datetime.min.time(),
+        )
+
+        task_id = on_booking_created(
+            booking_id=booking.id,
+            remind_at=remind_at,
+        )
+
+        await booking_crud.update(
+            db_obj=booking,
+            obj_in={"reminder_task_id": task_id},
+            session=session,
+        )
+
         logger.info(
             'Создано бронирование: %s',
             booking.__repr__(),
@@ -372,6 +393,23 @@ class BookingService:
             extra={'user': f'{user.username} id={user.id}'},
         )
 
+        new_remind_at = datetime.combine(
+            booking.booking_date,
+            datetime.min.time(),
+        )
+
+        new_task_id = on_booking_updated(
+            booking_id=booking.id,
+            old_task_id=booking.reminder_task_id,
+            new_remind_at=new_remind_at,
+        )
+
+        await booking_crud.update(
+            db_obj=booking,
+            obj_in={"reminder_task_id": new_task_id},
+            session=session,
+        )
+
         return booking
 
     async def deactivate_booking(
@@ -415,6 +453,16 @@ class BookingService:
             )
 
         booking = await booking_crud.soft_delete(booking, session)
+        on_booking_canceled(
+            booking_id=booking.id,
+            task_id=booking.reminder_task_id,
+        )
+
+        await booking_crud.update(
+            db_obj=booking,
+            obj_in={"reminder_task_id": None},
+            session=session,
+        )
 
         logger.info(
             'Бронирование деактивировано: %s',
