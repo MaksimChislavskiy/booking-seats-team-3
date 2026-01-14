@@ -179,7 +179,7 @@ async def update_user(
     '/{user_id}',
     status_code=status.HTTP_200_OK,
     response_model=UserInfo,
-    summary='Деактивировать пользователя',
+    summary='Деактивировать пользователя по ID',
     description=(
         'Деактивирует пользователя путем установки атрибута is_active=False. '
         'Доступно только администраторам.'
