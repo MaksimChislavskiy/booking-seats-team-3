@@ -263,7 +263,7 @@ class BookingService:
             related={'tables_slots': table_slot_objects},
             session=session,
         )
-        # TODO: позже можно считать по слотам
+
         remind_at = datetime.combine(
             booking.booking_date,
             datetime.min.time(),
@@ -392,7 +392,7 @@ class BookingService:
             booking.__repr__(),
             extra={'user': f'{user.username} id={user.id}'},
         )
-        # TODO: позже можно считать по слотам
+
         new_remind_at = datetime.combine(
             booking.booking_date,
             datetime.min.time(),
