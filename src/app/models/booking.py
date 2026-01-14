@@ -8,7 +8,6 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
-    String,
 )
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -127,6 +126,9 @@ class Booking(Base):
         String(255),
         nullable=True,
     )
+
+    user: Mapped['User'] = relationship('User', lazy='selectin')
+    cafe: Mapped['Cafe'] = relationship('Cafe', lazy='selectin')
 
     user: Mapped['User'] = relationship('User', lazy='selectin')
     cafe: Mapped['Cafe'] = relationship('Cafe', lazy='selectin')

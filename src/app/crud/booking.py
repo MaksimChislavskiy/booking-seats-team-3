@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import distinct, select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
@@ -25,7 +25,25 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
         exclude_booking_id: int | None = None,
         session: AsyncSession,
     ) -> list[Booking]:
-        # FIXME: docstring
+        """Возвращает бронирования, конфликтующие по столам и временным слотам.
+
+        Ищет активные бронирования в рамках одного кафе,
+        которые пересекаются по дате, столам, временным слотам
+        и статусу (`PENDING` или `CONFIRMED`) с проверяемым бронированием.
+
+        Args:
+            cafe_id: Идентификатор кафе.
+            booking_date: Дата бронирования.
+            table_ids: Множество идентификаторов столов.
+            slot_ids: Множество идентификаторов временных слотов.
+            exclude_booking_id: Идентификатор бронирования,
+                        которое нужно исключить из выборки.
+            session: Асинхронная SQLAlchemy-сессия.
+
+        Returns:
+            Список конфликтующих объектов Booking.
+
+        """
         stmt = (
             select(Booking)
             .distinct()
@@ -49,26 +67,41 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
         result = await session.execute(stmt)
         return result.scalars().all()
 
-    # FIXME: Удалить ненужные методы
-    async def get_by_user(
+    async def replace_tables_slots(
         self,
-        user_id: int,
+        booking_id: int,
+        tables_slots: list[TableSlotBooking],
         session: AsyncSession,
-    ) -> list[Booking]:
-        """Возвращает все бронирования пользователя."""
-        stmt = select(Booking).where(Booking.user_id == user_id)
-        result = await session.execute(stmt)
-        return result.scalars().all()
+    ) -> None:
+        """Полностью заменяет связки стол–слот для бронирования.
 
-    async def get_by_cafe(
-        self,
-        cafe_id: int,
-        session: AsyncSession,
-    ) -> list[Booking]:
-        """Возвращает все бронирования кафе."""
-        stmt = select(Booking).where(Booking.cafe_id == cafe_id)
-        result = await session.execute(stmt)
-        return result.scalars().all()
+        Выполняет замену связок стол–слот:
+        - Удаляет все существующие связки для бронирования;
+        - Создаёт новый набор связок на основе переданных данных;
+        - Фиксирует (комитит) изменения в базе данных.
+
+        Args:
+            booking_id: Идентификатор бронирования.
+            tables_slots: Новый список ORM-объектов `TableSlotBooking`.
+            session: Асинхронная SQLAlchemy-сессия.
+
+        """
+        await session.execute(
+            delete(TableSlotBooking).where(
+                TableSlotBooking.booking_id == booking_id,
+            ),
+        )
+        session.add_all(
+            [
+                TableSlotBooking(
+                    booking_id=booking_id,
+                    table_id=table_slot.table_id,
+                    slot_id=table_slot.slot_id,
+                )
+                for table_slot in tables_slots
+            ],
+        )
+        await session.commit()
 
 
 booking_crud = CRUDBooking(Booking)
