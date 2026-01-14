@@ -125,12 +125,27 @@ class CafeService:
         cafe = await get_cafe_or_404(cafe_id, session)
 
         if user.role == UserRole.ADMIN:
+            logger.info(
+                'Получено кафе администратором: %s',
+                cafe.__repr__(),
+                extra={'user': f'{user.username} id={user.id}'},
+            )
             return cafe
 
         if can_manage_cafe(user, cafe.id):
+            logger.info(
+                'Получено кафе менеджером: %s',
+                cafe.__repr__(),
+                extra={'user': f'{user.username} id={user.id}'},
+            )
             return cafe
 
         if user.role in {UserRole.USER, UserRole.MANAGER} and cafe.is_active:
+            logger.info(
+                'Получено кафе пользователем: %s',
+                cafe.__repr__(),
+                extra={'user': f'{user.username} id={user.id}'},
+            )
             return cafe
 
         raise HTTPException(
@@ -162,6 +177,10 @@ class CafeService:
             Список объектов Cafe.
 
         """
+        logger.info(
+            'Запрос списка кафе',
+            extra={'user': f'{user.username} id={user.id}'},
+        )
         if user.role == UserRole.ADMIN:
             if show_all:
                 return await cafe_crud.get_cafes(session=session)
@@ -229,9 +248,8 @@ class CafeService:
         await session.refresh(cafe)
 
         logger.info(
-            'Создано кафе "%s" (id=%s)',
-            cafe.name,
-            cafe.id,
+            'Создано кафе: %s',
+            cafe.__repr__(),
             extra={'user': f'{user.username} id={user.id}'},
         )
 
@@ -318,9 +336,8 @@ class CafeService:
         await session.refresh(cafe)
 
         logger.info(
-            'Кафе (id=%s) обновлено пользователем с ролью: "%s"',
-            cafe.id,
-            user.role,
+            'Кафе обновлено: %s',
+            cafe.__repr__(),
             extra={'user': f'{user.username} id={user.id}'},
         )
 
@@ -363,9 +380,8 @@ class CafeService:
         await cafe_crud.soft_delete(cafe, session)
 
         logger.info(
-            'Кафе "%s" (id=%s) деактивировано.',
-            cafe.name,
-            cafe.id,
+            'Кафе деактивировано: %s',
+            cafe.__repr__(),
             extra={'user': f'{user.username} id={user.id}'},
         )
 

@@ -110,7 +110,6 @@ class UserService:
         logger.info(
             'Пользователь успешно создан: %s',
             user.__repr__(),
-            extra={'user': f'{user.username} id={user.id}'},
         )
 
         return user
@@ -120,6 +119,7 @@ class UserService:
         *,
         user_id: int,
         user_in: UserUpdate,
+        current_user: User,
         session: AsyncSession,
     ) -> User:
         """Обновляет существующего пользователя.
@@ -133,6 +133,7 @@ class UserService:
         Args:
             user_id: ID пользователя.
             user_in: Данные для обновления пользователя.
+            current_user: Текущий пользователь.
             session: Асинхронная сессия базы данных.
 
 
@@ -172,8 +173,9 @@ class UserService:
         )
 
         logger.info(
-            'Пользователь успешно обновлён: user_id=%s',
-            user.id,
+            'Пользователь успешно обновлён: %s',
+            user.__repr__(),
+            extra={'user': f'{current_user.username} id={current_user.id}'},
         )
 
         return user

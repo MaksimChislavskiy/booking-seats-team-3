@@ -162,6 +162,7 @@ async def get_user_by_id(
 async def update_user(
     user_id: int,
     user_in: UserUpdate,
+    current_user: User = Depends(current_admin_or_manager),
     session: AsyncSession = Depends(get_async_session),
 ) -> UserInfo:
     """Возвращает обновленную информацию о пользователе по его ID.
@@ -171,6 +172,7 @@ async def update_user(
     return await user_service.update_user(
         user_id=user_id,
         user_in=user_in,
+        current_user=current_user,
         session=session,
     )
 
