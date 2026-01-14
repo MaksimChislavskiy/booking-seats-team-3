@@ -2,6 +2,7 @@ name: cafe_booking
 
 volumes:
   pg_data:
+  media_data:
 
 services:
   db:
@@ -44,23 +45,13 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    volumes:
+      - media_data:/app/media
     depends_on:
-      - db
-      - redis
-    restart: unless-stopped
-
-  celery:
-    container_name: cafe-celery
-    build:
-      context: ../src
-      dockerfile: Dockerfile
-    entrypoint: ""
-    command: celery -A app.core.celery_app.celery_app worker -l info
-    env_file:
-      - .env
-    depends_on:
-      - redis
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   gateway:
@@ -72,5 +63,4 @@ services:
     ports:
       - 8000:80
     depends_on:
-      - db
       - backend
