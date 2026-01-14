@@ -181,8 +181,8 @@ async def update_user(
     response_model=UserInfo,
     summary='Деактивировать пользователя по ID',
     description=(
-        'Деактивирует пользователя путем установки атрибута is_active=False. '
-        'Доступно только администраторам.'
+        'Деактивирует пользователя путем установки атрибута `is_active=False`.'
+        ' Доступно только администраторам.'
     ),
     responses={
         **OK_RESPONSE,
