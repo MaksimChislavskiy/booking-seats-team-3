@@ -47,11 +47,11 @@ CORS_ORIGINS=["http://localhost:3000"]
 # Initial admin bootstrap
 INITIAL_ADMIN_USERNAME=admin
 INITIAL_ADMIN_EMAIL=example@mail.com
-INITIAL_ADMIN_PASSWORD=example123
+INITIAL_ADMIN_PASSWORD=change_me
 
 # JWT
-# Use for generate secret: openssl rand -hex 32
-SECRET_KEY=1503c29a914e23494a51468c5dbcea92b4c1a0ab6708f560ad8e86c7513042a7
+# Generate a real secret with: openssl rand -hex 32
+SECRET_KEY=replace_with_generated_secret
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=3600
 
@@ -170,7 +170,7 @@ sudo docker compose -f docker-compose.prod.yml up -d --build
 ```shell
 INITIAL_ADMIN_USERNAME=admin
 INITIAL_ADMIN_EMAIL=example@mail.com
-INITIAL_ADMIN_PASSWORD=example123
+INITIAL_ADMIN_PASSWORD=change_me
 ```
 
 ## 🔔 Фоновые задачи (Celery)
